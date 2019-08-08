@@ -1,0 +1,126 @@
+<!-- Copyright (c) 2013, 2018 National Technology and Engineering Solutions of Sandia, LLC . Under the terms of Contract  DE-NA0003525 with National Technology and Engineering Solutions of Sandia, LLC, the U.S. Government  retains certain rights in this software. -->
+
+<div class="modal-header">
+  <h3 class="modal-title">New Parameter Space Old Model</h3>
+  <button type="button" class="close" data-bind="click: cancel" data-dismiss="modal" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <ul class="nav nav-pills">
+    <li class="nav-item" data-bind="css:{active:tab() == 0}"><a class="nav-link">Locate Data</a></li>
+    <li class="nav-item" data-bind="css:{active:tab() == 1}, visible: ps_type() == 'local'"><a class="nav-link">Upload Table</a></li>
+    <li class="nav-item" data-bind="css:{active:tab() == 2}, visible: ps_type() == 'remote'"><a class="nav-link">Choose Host</a></li>
+    <li class="nav-item" data-bind="css:{active:tab() == 3}, visible: ps_type() == 'remote'"><a class="nav-link">Select Table</a></li>
+    <li class="nav-item" data-bind="css:{active:tab() == 4}"><a class="nav-link">Select Columns</a></li>
+    <li class="nav-item" data-bind="css:{active:tab() == 5}"><a class="nav-link">Name Model</a></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <div data-bind="visible:tab() == 0">
+
+      <div class="form-check">
+        <label class="font-weight-bold">
+          <input type="radio" name="local-or-remote-radios" id="local-radio" value="local" data-bind="checked: ps_type">
+          Local
+        </label>
+      </div>
+
+      <div class="form-check">
+        <label class="font-weight-bold">
+          <input type="radio" name="local-or-remote-radios" id="remote-radio" value="remote" data-bind="checked: ps_type">
+          Remote
+        </label>
+      </div>
+
+      <div class="form-check">
+        <label class="font-weight-bold">
+          <input type="radio" name="matrix-local-or-remote-radios" id="server-radio" value="server" data-bind="checked: ps_type">
+          Server
+        </label>
+      </div>
+
+      <div class="form-check ml-5" data-bind="visible: ps_type() == 'server'">
+        <div class="form-group row">
+          <label for="selectmenu1" class="col-sm-2 col-form-label">
+            File
+          </label>
+          <div class="col-sm-10">
+            <select id="selectmenu1" class="form-control" name="" data-theme="c"
+                     data-bind="options: server_files, value: selected_file">
+            </select>
+          </div>
+        </div>
+        <slycat-parser-controls params="parser:parser,category:'table'" data-bind="visible: ps_type() == 'server'"></slycat-parser-controls>
+      </div>
+
+    </div>
+
+    <div data-bind="visible:tab() == 1" class="form-horizontal">
+      <slycat-local-browser params="
+        selection:browser.selection,
+        progress:browser.progress,
+        progress_status:browser.progress_status"></slycat-local-browser>
+      <slycat-parser-controls params="parser:parser,category:'table'"></slycat-parser-controls>
+    </div>
+
+    <div data-bind="visible:tab() == 2">
+      <form role="form">
+        <slycat-remote-controls params="
+          hostname:remote.hostname,
+          username:remote.username,
+          password:remote.password,
+          status:remote.status,status_type:remote.status_type,enable:remote.enable,focus:remote.focus,activate:connect,session_exists:remote.session_exists"></slycat-remote-controls>
+      </form>
+    </div>
+
+    <div data-bind="visible:tab() == 3" style="height: 400px">
+      <div class="slycat-remote-browser-flex-layout">
+        <slycat-remote-browser params="
+          type:'remote',
+          sid:remote.sid,
+          hostname:remote.hostname,
+          selection:browser.selection,
+          path:browser.path,
+          open_file_callback:load_table,
+          session_exists:remote.session_exists,
+          persistence_id:'pi-table-file',
+          progress:remote.progress,
+          progress_status:remote.progress_status"></slycat-remote-browser>
+        <slycat-parser-controls params="parser:parser,category:'table'"></slycat-parser-controls>
+      </div>
+    </div>
+
+    <div data-bind="visible:tab() == 4">
+      <slycat-table-ingestion params="
+        variables: attributes,
+        properties: [
+          {name: 'Classification', type: 'select', values: ['Input','Output','Neither']},
+          {name: 'Categorical', type: 'bool'},
+          {name: 'Editable', type: 'bool'}
+        ]
+      "></slycat-table-ingestion>
+    </div>
+
+    <div data-bind="visible:tab() == 5">
+      <form data-bind="submit: name_model" id="new-parameter-image-name-model-form" novalidate>
+        <slycat-model-controls params="name:model.name,description:model.description,marking:model.marking"></slycat-model-controls>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-light mr-auto" data-bind="visible: [0].indexOf(tab()) == -1, click: back">Back</button>
+  <button class="btn btn-primary" data-bind="visible:tab() == 0,click:select_type">Continue</button>
+  <button class="btn btn-primary local-browser-continue browser-continue" data-bind="visible:tab() == 1,click:upload_table"><i class="fa fa-spinner fa-pulse"></i> Continue</button>
+  <button class="btn btn-primary" data-bind="visible:tab() == 2,click:connect,enable:remote.enable">Continue</button>
+  <button class="btn btn-primary remote-browser-continue browser-continue" data-bind="visible:tab() == 3,click:load_table"><i class="fa fa-spinner fa-pulse"></i> Continue</button>
+  <button class="btn btn-primary" data-bind="visible:tab() == 4,click:finish">Continue</button>
+  <button class="btn btn-primary" 
+    data-bind="
+      visible: tab() == 5,
+      click: function(data, event) { name_model(document.getElementById('new-parameter-image-name-model-form'), data, event) }
+    "
+  >Finish & Go To Model</button>
+</div>

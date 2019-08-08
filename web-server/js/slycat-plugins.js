@@ -11,6 +11,7 @@ import 'plugins/slycat-project-wizards/slycat-project-wizards';
 
 // Models
 import 'plugins/slycat-parameter-image/slycat-parameter-image';
+import 'plugins/slycat-parameter-image-old/slycat-parameter-image';
 import 'plugins/slycat-timeseries-model/slycat-timeseries-model';
 import 'plugins/slycat-cca/slycat-cca';
 import 'plugins/slycat-parameter-image-plus-model/slycat-parameter-image-plus-model';
@@ -32,6 +33,9 @@ export async function loadTemplate(name, format) {
   switch(name) {
     case "parameter-image":
       html = await import(/* webpackChunkName: "ui_parameter_image_template" */ 'plugins/slycat-parameter-image/ui.html');
+      break;
+    case "parameter-image-old":
+      html = await import(/* webpackChunkName: "ui_parameter_image_template" */ 'plugins/slycat-parameter-image-old/ui.html');
       break;
     case "timeseries":
       html = await import(/* webpackChunkName: "ui_timeseries_template" */ 'plugins/slycat-timeseries-model/ui.html');
@@ -78,6 +82,9 @@ export async function loadModule(name) {
   switch(name) {
     case "parameter-image":
       module = await import(/* webpackChunkName: "ui_parameter_image_module" */ 'plugins/slycat-parameter-image/js/ui.js');
+      break;
+    case "parameter-image-old":
+      module = await import(/* webpackChunkName: "ui_parameter_image_module" */ 'plugins/slycat-parameter-image-old/js/ui.js');
       break;
     case "timeseries":
       module = await import(/* webpackChunkName: "ui_timeseries_module" */ 'plugins/slycat-timeseries-model/js/ui.js');
