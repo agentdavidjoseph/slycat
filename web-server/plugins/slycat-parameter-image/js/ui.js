@@ -37,7 +37,9 @@ import "layout";
 import "js/slycat-range-slider"; 
 import "./category-select";
 
-import { createStore } from 'redux';
+import thunkMiddleware from 'redux-thunk';
+import { createLogger } from 'redux-logger';
+import { createStore, applyMiddleware } from 'redux';
 import slycat from './reducers';
 
 // Wait for document ready
