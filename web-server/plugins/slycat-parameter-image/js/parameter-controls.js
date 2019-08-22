@@ -7,32 +7,33 @@ import ReactDOM from "react-dom";
 import "jquery-ui";
 import ControlsBar from './Components/controls-bar';
 import "bootstrap";
+import $ from 'jquery';
 
 $.widget("parameter_image.controls",
 {
   options:
   {
-    mid : null,
-    model_name : null,
-    aid : null,
-    metadata : null,
+    "mid" : null,
+    "model_name" : null,
+    "aid" : null,
+    "metadata" : null,
     "x-variable" : null,
     "y-variable" : null,
     "image-variable" : null,
     "color-variable" : null,
     "auto-scale" : true,
-    x_variables : [],
-    y_variables : [],
-    axes_variables : [],
-    image_variables : [],
-    color_variables : [],
-    rating_variables : [],
-    category_variables : [],
-    selection : [],
-    hidden_simulations : [],
-    indices : [],
-    disable_hide_show : false,
-    open_images : [],
+    "x_variables" : [],
+    "y_variables" : [],
+    "axes_variables" : [],
+    "image_variables" : [],
+    "color_variables" : [],
+    "rating_variables" : [],
+    "category_variables" : [],
+    "selection" : [],
+    "hidden_simulations" : [],
+    "indices" : [],
+    "disable_hide_show" : false,
+    "open_images" : [],
     "video-sync" : false,
     "video-sync-time" : 0,
   },
@@ -122,7 +123,7 @@ $.widget("parameter_image.controls",
     ];
 
     const controls_bar = 
-      <ControlsBar 
+      (<ControlsBar 
         element={self.element} 
         dropdowns={dropdowns}
         axes_variables={axes_items}
@@ -141,7 +142,7 @@ $.widget("parameter_image.controls",
         rating_variables={self.options.rating_variables}
         video_sync={self.options["video-sync"]}
         video_sync_time={self.options["video-sync-time"]}
-      />
+      />)
     ;
 
     self.ControlsBarComponent = ReactDOM.render(
