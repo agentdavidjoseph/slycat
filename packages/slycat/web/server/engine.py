@@ -107,6 +107,7 @@ def start(root_path, config_file):
   dispatcher.connect("get-projects", "/projects", slycat.web.server.handlers.get_projects_list, conditions={"method" : ["GET"]})
   dispatcher.connect("get-projects-list", "/projects_list", slycat.web.server.handlers.get_projects_list, conditions={"method" : ["GET"]})
   dispatcher.connect("put-project-csv-data", "/projects/:pid/data/:file_key/parser/:parser/mid/:mid/aids/:aids", slycat.web.server.handlers.put_project_csv_data, conditions={"method": ["PUT"]})
+  dispatcher.connect("post-project-data", "/projects/data/:pid", slycat.web.server.handlers.create_project_data_from_pid, conditions={"method": ["POST"]})
   dispatcher.connect("get-project-file-names", "/projects/:pid/name", slycat.web.server.handlers.get_project_file_names, conditions={"method": ["GET"]})
   #TODO: scrub sid
   dispatcher.connect("get-remote-file", "/remotes/:hostname/file{path:.*}", slycat.web.server.handlers.get_remote_file, conditions={"method" : ["GET"]})
@@ -167,7 +168,7 @@ def start(root_path, config_file):
   dispatcher.connect("clear-ssh-sessions", "/clear/ssh-sessions", slycat.web.server.handlers.clear_ssh_sessions, conditions={"method" : ["GET"]})
   dispatcher.connect("delete-model-parameter", "/delete-artifact/:mid/:aid", slycat.web.server.handlers.delete_model_parameter, conditions={"method" : ["DELETE"]})
   dispatcher.connect("login", "/login", slycat.web.server.handlers.login, conditions={"method" : ["POST"]})
-  dispatcher.connect("openid-login", "/openid-login/", slycat.web.server.handlers.open_id_authenticate, conditions={"method": ["GET"]})
+  dispatcher.connect("openid-login", "/openid-login", slycat.web.server.handlers.open_id_authenticate, conditions={"method": ["GET"]})
   dispatcher.connect("get-root", "/", slycat.web.server.handlers.get_root, conditions={"method" : ["GET"]})
 
 

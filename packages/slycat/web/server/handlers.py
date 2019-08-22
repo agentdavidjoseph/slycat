@@ -433,6 +433,41 @@ def post_project_models(pid):
     cherrypy.response.status = "201 Model created."
     return {"id": mid}
 
+# @cherrypy.tools.json_in(on=True)
+# @cherrypy.tools.json_out(on=True)
+def create_project_data_from_pid(pid, file=None, file_name=None):
+    """
+    creates a project level data object from a project id 
+    that can be used to create new
+    models in the current project
+    :param file_name: artifact ID
+    :param file: file attachment
+    :return: not used
+    """
+
+    csv_data = str(file.file.read())
+
+    content_type = "text/csv"
+    database = slycat.web.server.database.couchdb.connect()
+    timestamp = time.time()
+    formatted_timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    did = uuid.uuid4().hex
+
+    data = {
+        "_id": did,
+        "type": "project_data",
+        "file_name": formatted_timestamp + "_" + file_name,
+        "data_table": "data-table",
+        "project": pid,
+        "mid": [""],
+        "created": datetime.datetime.utcnow().isoformat(),
+        "creator": cherrypy.request.login,
+    }
+
+    database.save(data)
+    database.put_attachment(data, filename="content", content_type=content_type, content=csv_data)
+    cherrypy.log.error("[MICROSERVICE] Added project data %s." % data["file_name"])
+
 def create_project_data(mid, aid, file):
     """
     creates a project level data object that can be used to create new
@@ -857,11 +892,11 @@ def open_id_authenticate(**params):
     :param params: openid params as a dictionary
     :return: not used
     """
+    cherrypy.log.error("++ open_id_authenticate starting, incoming params = %s" % params)
     # check for openid in the config for security
     if slycat.web.server.config["slycat-web-server"]["authentication"]["plugin"] != "slycat-openid-authentication":
         raise cherrypy.HTTPError(404)
 
-    cherrypy.log.error("++ open_id_authenticate incoming params = %s" % params)
     current_url = urlparse.urlparse(cherrypy.url() + "?" + cherrypy.request.query_string)
     kerberos_principal = params['openid.ext2.value.Authuser']
     auth_user = kerberos_principal.split("@")[0]
