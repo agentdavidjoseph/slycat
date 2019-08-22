@@ -10,7 +10,7 @@ import ControlsButton from 'components/ControlsButton';
 import FileSelector from './file-selector';
 import ControlsButtonUpdateTable from './update-table.jsx';
 import ControlsButtonDownloadDataTable from 'components/ControlsButtonDownloadDataTable';
-import VisibleVarOptions from './visible-var-options';
+import ControlsButtonVarOptions from './controls-button-var-options';
 
 class ControlsBar extends React.Component {
   constructor(props) {
@@ -241,7 +241,7 @@ class ControlsBar extends React.Component {
         <React.StrictMode>
           <ControlsGroup id="scatterplot-controls" class="btn-group ml-3">
             {dropdowns}
-            <VisibleVarOptions 
+            <ControlsButtonVarOptions 
               selection={this.state.selection} 
               hidden_simulations={this.state.hidden_simulations}
               aid={this.props.aid} mid={this.props.mid} 

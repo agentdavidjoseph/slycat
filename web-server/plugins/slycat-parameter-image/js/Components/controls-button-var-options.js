@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import { connect } from 'react-redux';
+import { changeFontSize, changeFontFamily, changeAxesVariableScale } from '../actions';
+
 import ControlsButton from 'components/ControlsButton';
 import SlycatTableIngestion from "js/slycat-table-ingestion-react";
 import "js/slycat-table-ingestion";
 import ko from "knockout";
 import "../../css/controls-button-var-options.css";
 
-export default function ControlsButtonVarOptions(props) {
+function ControlsButtonVarOptions(props) {
   const modalId = 'varOptionsModal';
   const title = 'Edit Axes Scales';
 
@@ -68,7 +71,7 @@ export default function ControlsButtonVarOptions(props) {
 
   const fontItems = fonts.map((font, index) =>
     <a key={index} 
-      href="#" onClick={props.onFontFamilyChange}
+      href="#" onClick={() => props.changeFontFamily(event.target.innerText)}
       style={{fontFamily: font.fontFamily}} 
       className={`dropdown-item {font.fontFamily == props.font_family ? 'active' : 'notactive'}`}
     >
@@ -106,7 +109,7 @@ export default function ControlsButtonVarOptions(props) {
                     <label htmlFor="font-size">Size</label>
                     <input type="number" className="form-control form-control-sm" id="font-size" max="40" min="8" step="1" style={{width: "70px"}}
                       value={props.font_size} 
-                      onChange={props.onFontSizeChange}
+                      onChange={() => props.changeFontSize(event.target.value)}
                     />
                   </div>
                 </div>
@@ -116,7 +119,7 @@ export default function ControlsButtonVarOptions(props) {
                 uniqueID="varOptions"
                 variables={axes_variables}
                 properties={axes_properties}
-                onChange={props.onAxesVariableScaleChange}
+                onChange={() => props.changeAxesVariableScale(event.target.name, event.target.value)}
               />
             </div>
             <div className="modal-footer">
@@ -131,3 +134,20 @@ export default function ControlsButtonVarOptions(props) {
     </React.Fragment>
   );
 }
+
+const mapStateToProps = state => {
+  return {
+    font_size: state.fontSize,
+    font_family: state.fontFamily,
+    axes_variables_scale: state.axesVariables,
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  { 
+    changeFontSize, 
+    changeFontFamily,
+    changeAxesVariableScale,
+  }
+)(ControlsButtonVarOptions)
