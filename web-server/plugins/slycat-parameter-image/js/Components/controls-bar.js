@@ -239,7 +239,7 @@ class ControlsBar extends React.Component {
       <Provider store={window.store}>
         <React.Fragment>
         <React.StrictMode>
-          <ControlsGroup id="scatterplot-controls" class="btn-group ml-3">
+          <ControlsGroup id='scatterplot-controls' class='btn-group ml-3'>
             {dropdowns}
             <ControlsButtonVarOptions 
               selection={this.state.selection} 
@@ -252,8 +252,9 @@ class ControlsBar extends React.Component {
               button_style={button_style}
             />
           </ControlsGroup>
-          <ControlsGroup id="selection-controls" class="btn-group ml-3">
-            <ControlsButtonToggle title="Auto Scale" icon="fa-external-link" active={this.state.auto_scale} set_active_state={this.set_auto_scale} button_style={button_style} />
+          <ControlsGroup id='selection-controls' class='btn-group ml-3'>
+            <ControlsButtonToggle title='Auto Scale' icon='fa-external-link' active={this.state.auto_scale} 
+              set_active_state={this.set_auto_scale} button_style={button_style} />
             <ControlsSelection
               trigger_hide_selection={this.trigger_hide_selection}
               trigger_hide_unselected={this.trigger_hide_unselected}
@@ -268,25 +269,29 @@ class ControlsBar extends React.Component {
               element={this.props.element}
               button_style={button_style}
             />
-            <ControlsButton label="Show All" title={show_all_title} disabled={show_all_disabled} click={this.trigger_show_all} button_style={button_style} />
-            <ControlsButton label="Close All Pins" title="" disabled={close_all_disabled} click={this.trigger_close_all} button_style={button_style} />
+            <ControlsButton label='Show All' title={show_all_title} disabled={show_all_disabled} 
+              click={this.trigger_show_all} button_style={button_style} />
+            <ControlsButton label='Close All Pins' title='' disabled={close_all_disabled} 
+              click={this.trigger_close_all} button_style={button_style} />
             <ControlsButtonDownloadDataTable selection={this.state.selection} hidden_simulations={this.state.hidden_simulations}
               aid={this.props.aid} mid={this.props.mid} model_name={this.props.model_name} metadata={this.props.metadata}
               indices={this.props.indices} button_style={button_style} />
           </ControlsGroup>
-          <ControlsGroup id="file-selector" class="input-group input-group-sm ml-3">
+          <ControlsGroup id='file-selector' class='input-group input-group-sm ml-3'>
             <ControlsButtonUpdateTable button_style={button_style} mid={this.props.mid} pid={this.props.pid}/>
           </ControlsGroup>
           {any_video_open &&
           <React.Fragment>
-          <ControlsGroup id="video-controls" class="input-group input-group-sm ml-3">
-            <ControlsVideo video_sync={this.state.video_sync} set_video_sync={this.set_video_sync} video_sync_time_value={this.state.video_sync_time_value}
+          <ControlsGroup id='video-controls' class='input-group input-group-sm ml-3'>
+            <ControlsVideo video_sync={this.state.video_sync} set_video_sync={this.set_video_sync} 
+              video_sync_time_value={this.state.video_sync_time_value}
               set_video_sync_time_value={this.set_video_sync_time_value} set_video_sync_time={this.set_video_sync_time}
               any_video_open={any_video_open} button_style={button_style}
             />
           </ControlsGroup>
-          <ControlsGroup id="playback-controls" class="btn-group ml-3">
-            <ControlsPlayback trigger_jump_to_start={this.trigger_jump_to_start} trigger_frame_back={this.trigger_frame_back} trigger_play={this.trigger_play}
+          <ControlsGroup id='playback-controls' class='btn-group ml-3'>
+            <ControlsPlayback trigger_jump_to_start={this.trigger_jump_to_start} 
+              trigger_frame_back={this.trigger_frame_back} trigger_play={this.trigger_play}
               trigger_pause={this.trigger_pause} trigger_frame_forward={this.trigger_frame_forward} trigger_jump_to_end={this.trigger_jump_to_end}
               any_video_open={any_video_open} disabled={disabled_playback} playing={playing} button_style={button_style}
             />
