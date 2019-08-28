@@ -49,6 +49,47 @@ $(document).ready(function() {
   // Setup global variables.
   //////////////////////////////////////////////////////////////////////////////////////////
 
+  var bookmarker = null;
+  // var store = null;
+
+  // A default state
+  // Commented out properties are set later because they depend on model
+  // data that hasn't been downloaded yet.
+  let redux_state_tree = {
+    derived: // Object that will hold state computed from model data
+    { 
+      // table_metadata: table_metadata,
+      model_id: URI(window.location).segment(-1),
+      // input_columns: model["artifact:input-columns"],
+      // output_columns: model["artifact:output-columns"],
+      // other_columns: null,
+      // color_variables: null,
+      // indices: null, // Array
+      // x: null, // Array
+      // y: null, // Array
+      // v: null, // Array
+      // scatterplot_width: null, // Width of scatterplot
+      // scatterplot_height: null, // Height of scatterplot
+      // table_width: null, // Width of table
+      // table_height: null, // Height of table
+      // barplot_width: null, // Width of barplot
+      // barplot_height: null, // Height of barplot
+      column_data: { // Object that will hold the values for columns
+        // 0: { // Column index
+        //   isFetching: false, // Ajax request for data state
+        //   values: [], // All values for the column in an array
+        // }
+      }, 
+    }, 
+    colormap: 'night', // String reprsenting current color map
+    simulations_selected: [], // Array containing which simulations are selected. Empty for none.
+    // variable_selected: table_metadata["column-count"] - 1, // Number indicating the index of the selected variable. One always must be selected.
+    variable_sorted: null, // Number indicating the index of the sorted variable. Set to 'null' for no sort?
+    variable_sort_direction: 'ascending', // String indicating the sort direction of the sorted variable. Set to 'null' for no sort?
+    scatterplot_font_family: 'Arial', // String formatted as a valid font-family CSS property.
+    scatterplot_font_size: '14px', // String formatted as a valid font-size CSS property.
+  }
+
   var model = null;
   var model_id = URI(window.location).segment(-1);
   var input_columns = null;
