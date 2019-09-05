@@ -79,7 +79,7 @@ function ControlsButtonVarOptions(props) {
       "disabled": false,
       "hidden": false,
       "lastSelected": false,
-      "name": axes_variable.name,
+      "name": props.variable_aliases[index] || axes_variable.name,
       "selected": false,
       "tooltip": '',
     });
