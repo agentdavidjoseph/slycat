@@ -185,7 +185,7 @@ function ControlsButtonVarOptions(props) {
                     uniqueID='varOptions'
                     variables={axes_variables}
                     properties={axes_properties}
-                    onChange={props.onAxesVariableScaleChange}
+                    onChange={() => props.changeAxesVariableScale(event.target.name, event.target.value)}
                   />
                 </div>
                 <div className='tab-pane' id='variable-alias-tab-content' role='tabpanel' aria-labelledby='variable-alias-tab'>
