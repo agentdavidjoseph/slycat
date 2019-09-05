@@ -15,6 +15,7 @@ $.widget("parameter_image.controls",
   {
     "mid" : null,
     "model_name" : null,
+    "model" : null,
     "aid" : null,
     "metadata" : null,
     "x-variable" : null,
@@ -135,6 +136,7 @@ $.widget("parameter_image.controls",
         pid={self.options.pid}
         mid={self.options.mid}
         aid={self.options.aid}
+        model={self.options.model}
         model_name={self.options.model_name}
         metadata={self.options.metadata}
         indices={self.options.indices}
@@ -142,6 +144,7 @@ $.widget("parameter_image.controls",
         rating_variables={self.options.rating_variables}
         video_sync={self.options["video-sync"]}
         video_sync_time={self.options["video-sync-time"]}
+        variable_aliases={window.store.getState().derived.variableAliases}
       />)
     ;
 
@@ -161,6 +164,13 @@ $.widget("parameter_image.controls",
       menus.css('max-height', (container.height() - 70) + 'px');
     });
 
+    // Set the state of ControlsBarComponent's variable_aliases to what's in the Redux state
+    // each time the Redux state changes. This is a work around to be used only
+    // until we conver PS to React because it currently uses local state in the controls bar.
+    const update_variable_aliases = () => {
+      self.ControlsBarComponent.setState({variable_aliases: window.store.getState().derived.variableAliases});
+    };
+    window.store.subscribe(update_variable_aliases);
   },
 
   _setOption: function(key, value)

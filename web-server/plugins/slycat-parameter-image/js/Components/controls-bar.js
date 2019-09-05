@@ -25,6 +25,7 @@ class ControlsBar extends React.Component {
       video_sync_time: this.props.video_sync_time,
       video_sync_time_value: this.props.video_sync_time,
       var_settings: this.props.var_settings,
+      variable_aliases: this.props.variable_aliases,
     };
     for(let dropdown of this.props.dropdowns)
     {
@@ -166,6 +167,16 @@ class ControlsBar extends React.Component {
     this.props.element.trigger("jump-to-end");
   }
 
+  get_variable_label(variable)
+  {
+    if(this.state.variable_aliases[variable] !== undefined)
+    {
+      return this.state.variable_aliases[variable];
+    }
+    
+    return this.props.metadata["column-names"][variable]
+  }
+
   render() {
     // Define default button style
     const button_style = 'btn-outline-dark';
@@ -176,7 +187,17 @@ class ControlsBar extends React.Component {
     const close_all_disabled = this.state.open_images.length == 0;
     const disable_pin = !(this.state.media_variable && this.state.media_variable >= 0);
     const hide_pin = !(this.props.media_variables.length > 0);
-    const dropdowns = this.props.dropdowns.map((dropdown) =>
+
+    // Update dropdowns with variable aliases when they exist
+    const aliased_dropdowns = this.props.dropdowns.map((dropdown) => {
+      dropdown.items = dropdown.items.map((item) => {
+        item.name = this.get_variable_label(item.key);
+        return item;
+      });
+      return dropdown;
+    });
+
+    const dropdowns = aliased_dropdowns.map((dropdown) =>
     {
       if(dropdown.items.length > 1)
       {
@@ -245,6 +266,7 @@ class ControlsBar extends React.Component {
               selection={this.state.selection} 
               hidden_simulations={this.state.hidden_simulations}
               aid={this.props.aid} mid={this.props.mid} 
+              model={this.props.model}
               model_name={this.props.model_name} 
               metadata={this.props.metadata}
               indices={this.props.indices} 

@@ -617,6 +617,23 @@ def get_model(mid, **kwargs):
     slycat.web.server.authentication.require_project_reader(project)
     return model
 
+@cherrypy.tools.json_out(on=True)
+def get_project_data(did, **kwargs):
+    """
+    Returns a project data.
+    
+    Arguments:
+        did {string} -- data id
+    
+    Returns:
+        json -- represents a project data
+    """
+    database = slycat.web.server.database.couchdb.connect()
+    project_data = database.get("project_data", did)
+    project = database.get("project", project_data["project"])
+    slycat.web.server.authentication.require_project_reader(project)
+    return project_data
+
 
 def model_command(mid, type, command, **kwargs):
     """
@@ -1030,6 +1047,32 @@ def put_model_inputs(mid):
         raise cherrypy.HTTPError("400 Cannot duplicate a model from another project.")
 
     slycat.web.server.put_model_inputs(database, model, source, deep_copy)
+
+@cherrypy.tools.json_in(on=True)
+def put_project_data_parameter(did, aid):
+    database = slycat.web.server.database.couchdb.connect()
+    # project_data = database.get("project-data", did)
+    # Alex changing dash to underscore, otherwise this breaks
+    project_data = database.get("project_data", did)
+    project = database.get("project", project_data["project"])
+    slycat.web.server.authentication.require_project_writer(project)
+
+    value = require_json_parameter("value")
+    input = require_boolean_json_parameter("input")
+    with slycat.web.server.database.couchdb.db_lock:
+        try:
+            slycat.web.server.put_project_data_parameter(database, project_data, aid, value, input)
+        except Exception:
+            time.sleep(1)
+            database = slycat.web.server.database.couchdb.connect()
+            project_data = database.get("project_data", did)
+            project = database.get("project", project_data["project"])
+            slycat.web.server.authentication.require_project_writer(project)
+
+            value = require_json_parameter("value")
+            input = require_boolean_json_parameter("input")
+            slycat.web.server.put_project_data_parameter(database, project_data, aid, value, input)
+
 
 
 @cherrypy.tools.json_in(on=True)
