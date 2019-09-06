@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { connect } from 'react-redux';
-import { changeFontSize, changeFontFamily, changeAxesVariableScale } from '../actions';
+import { 
+  changeFontSize, 
+  changeFontFamily, 
+  changeAxesVariableScale, 
+  changeVariableAliasLabels 
+} from '../actions';
 
 import ControlsButton from 'components/ControlsButton';
 import SlycatTableIngestion from "js/slycat-table-ingestion-react";
@@ -192,7 +197,7 @@ function ControlsButtonVarOptions(props) {
                   <VariableAliasLabels 
                     variableAliases={props.variable_aliases}
                     metadata={props.metadata}
-                    onChange={() => props.changeAxesVariableScale(event.target.name, event.target.value)}
+                    onChange={() => props.changeVariableAliasLabels(event.target.name, event.target.value)}
                   />
                 </div>
               </div>
@@ -231,5 +236,6 @@ export default connect(
     changeFontSize, 
     changeFontFamily,
     changeAxesVariableScale,
+    changeVariableAliasLabels,
   }
 )(ControlsButtonVarOptions)
