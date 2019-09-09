@@ -57,8 +57,8 @@ $(document).ready(function() {
   // Setup global variables.
   //////////////////////////////////////////////////////////////////////////////////////////
 
-  var bookmarker = null;
-  var store = null;
+  let bookmarker = null;
+  let store = null;
 
   // A default state
   // Commented out properties are set later because they depend on model
@@ -449,7 +449,7 @@ $(document).ready(function() {
           // console.log('indices_promise error');
           table_metadata_promise
             .then(function(){
-              var count = redux_state_tree.derived.table_metadata["row-count"];
+              let count = redux_state_tree.derived.table_metadata["row-count"];
               let indices = new Int32Array(count);
               for(let i = 0; i != count; ++i) {
                 indices[i] = i;
