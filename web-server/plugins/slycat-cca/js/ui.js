@@ -12,6 +12,7 @@ import api_root from "js/slycat-api-root";
 import client from "js/slycat-web-client";
 import bookmark_manager from "js/slycat-bookmark-manager";
 import * as dialog from "js/slycat-dialog";
+import doPoll from 'js/slycat-model-poll';
 import URI from "urijs";
 import * as chunker from "js/chunker";
 import slycat_color_maps from "js/slycat-color-maps";
@@ -108,48 +109,21 @@ $(document).ready(function() {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Get the model
   //////////////////////////////////////////////////////////////////////////////////////////
-  function doPoll(){
-    // Return a new promise.
-    return new Promise(function try_get_model(resolve, reject) {
-      client.get_model(
-      {
-        mid: redux_state_tree.derived.model_id,
-        success : function(model)
-        {          
-          // When state is waiting or running, wait 5 seconds and try again
-          if(model["state"] === "waiting" || model["state"] === "running") {
-            setTimeout(function(){try_get_model(resolve, reject)}, 5000);
-          }
-
-          // Reject closed with no results and failes models
-          else if(model["state"] === "closed" && model["result"] === null) {
-            reject("Closed with no result.");
-          }
-          else if(model["result"] === "failed") {
-            reject("Failed.");
-          }
-          
-          // Otherwise resolve the promise
-          else {
-            resolve(model);
-          }
-        },
-        error: dialog.ajax_error("Error retrieving model."),
-      });
-    });
-  }
-  let get_model_promise = doPoll();
+  let get_model_promise = doPoll(redux_state_tree.derived.model_id);
 
   // We have a completed model, so remove the navbar alert and start setting some derived state
-  get_model_promise.then(function(model){
-    $('.slycat-navbar-alert').remove();
-    redux_state_tree.derived.model = model;
-    redux_state_tree.derived.input_columns = model["artifact:input-columns"];
-    redux_state_tree.derived.output_columns = model["artifact:output-columns"];
-  }).catch(function(error){
-    console.log("promise rejected");
-    throw error;
-  });
+  get_model_promise
+    .then((model) => {
+      $('.slycat-navbar-alert').remove();
+      redux_state_tree.derived.model = model;
+      redux_state_tree.derived.input_columns = model["artifact:input-columns"];
+      redux_state_tree.derived.output_columns = model["artifact:output-columns"];
+    })
+    .catch((error) => {
+      console.log("promise rejected");
+      throw error;
+    })
+    ;
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Setup page layout.

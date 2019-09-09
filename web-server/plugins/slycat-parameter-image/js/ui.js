@@ -17,6 +17,7 @@ import mapping from "knockout-mapping";
 import client from "js/slycat-web-client";
 import bookmark_manager from "js/slycat-bookmark-manager";
 import * as dialog from "js/slycat-dialog";
+import doPoll from 'js/slycat-model-poll';
 import NoteManager from "./note-manager";
 import FilterManager from "./filter-manager";
 // import d3 from "d3";
@@ -49,8 +50,8 @@ $(document).ready(function() {
   // Setup global variables.
   //////////////////////////////////////////////////////////////////////////////////////////
 
-  var bookmarker = null;
-  // var store = null;
+  let bookmarker = null;
+  let store = null;
 
   // A default state
   // Commented out properties are set later because they depend on model
@@ -58,22 +59,26 @@ $(document).ready(function() {
   let redux_state_tree = {
     derived: // Object that will hold state computed from model data
     { 
-      // table_metadata: table_metadata,
+        // table_metadata: table_metadata,
       model_id: URI(window.location).segment(-1),
       // input_columns: model["artifact:input-columns"],
       // output_columns: model["artifact:output-columns"],
-      // other_columns: null,
-      // color_variables: null,
-      // indices: null, // Array
-      // x: null, // Array
-      // y: null, // Array
-      // v: null, // Array
-      // scatterplot_width: null, // Width of scatterplot
-      // scatterplot_height: null, // Height of scatterplot
-      // table_width: null, // Width of table
-      // table_height: null, // Height of table
-      // barplot_width: null, // Width of barplot
-      // barplot_height: null, // Height of barplot
+      // image_columns = model["artifact:image-columns"];
+      // rating_columns = model["artifact:rating-columns"] == undefined ? [] : model["artifact:rating-columns"];
+      // category_columns = model["artifact:category-columns"] == undefined ? [] : model["artifact:category-columns"];
+
+        // other_columns: null,
+        // color_variables: null,
+        // indices: null, // Array
+        // x: null, // Array
+        // y: null, // Array
+        // v: null, // Array
+        // scatterplot_width: null, // Width of scatterplot
+        // scatterplot_height: null, // Height of scatterplot
+        // table_width: null, // Width of table
+        // table_height: null, // Height of table
+        // barplot_width: null, // Width of barplot
+        // barplot_height: null, // Height of barplot
       column_data: { // Object that will hold the values for columns
         // 0: { // Column index
         //   isFetching: false, // Ajax request for data state
@@ -99,7 +104,7 @@ $(document).ready(function() {
   var category_columns = null;
   var other_columns = null;
 
-  var bookmarker = null;
+  // var bookmarker = null;
   var bookmark = null;
   var note_manager = null;
   var filter_manager = null;
@@ -198,9 +203,11 @@ $(document).ready(function() {
   });
 
   //////////////////////////////////////////////////////////////////////////////////////////
-  // Load the model
+  // Get the model
   //////////////////////////////////////////////////////////////////////////////////////////
-  function doPoll(){
+
+  // Old way
+  function doPollOld(){
     $.ajax(
     {
       type : "GET",
@@ -248,7 +255,26 @@ $(document).ready(function() {
       }
     });
   }
-  doPoll();
+  doPollOld();
+
+  let get_model_promise = doPoll(redux_state_tree.derived.model_id);
+
+  // We have a completed model, so remove the navbar alert and start setting some derived state
+  get_model_promise
+    .then((model) => {
+      $('.slycat-navbar-alert').remove();
+      redux_state_tree.derived.model = model;
+      redux_state_tree.derived.input_columns = model["artifact:input-columns"];
+      redux_state_tree.derived.output_columns = model["artifact:output-columns"];
+      redux_state_tree.derived.image_columns = model["artifact:image-columns"];
+      redux_state_tree.derived.rating_columns = model["artifact:rating-columns"] == undefined ? [] : model["artifact:rating-columns"];
+      redux_state_tree.derived.category_columns = model["artifact:category-columns"] == undefined ? [] : model["artifact:category-columns"];
+    })
+    .catch((error) => {
+      console.log("promise rejected");
+      throw error;
+    })
+    ;
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Once the model has been loaded, retrieve metadata / bookmarked state
@@ -376,9 +402,9 @@ $(document).ready(function() {
         window.store.subscribe(update_scatterplot_labels);
 
         // Set local variables based on Redux store
-        axes_font_size = store.getState().fontSize;
-        axes_font_family = store.getState().fontFamily;
-        axes_variables_scale = store.getState().axesVariables;
+        axes_font_size = window.store.getState().fontSize;
+        axes_font_family = window.store.getState().fontFamily;
+        axes_variables_scale = window.store.getState().axesVariables;
 
         // set this in callback for now to keep FilterManager isolated but avoid a duplicate GET bookmark AJAX call
         filter_manager.set_bookmark(bookmark);
