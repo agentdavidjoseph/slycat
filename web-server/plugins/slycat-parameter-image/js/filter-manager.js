@@ -574,7 +574,7 @@ FilterManager.prototype.build_sliders = function(controls_ready) {
 
     ko.applyBindings(
       new ViewModel(),
-      document.getElementById('parameter-image-plus-layout')
+      document.getElementById('parameter-space-layout')
     );
 
     self.active_filters_ready(true);

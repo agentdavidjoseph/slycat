@@ -49,7 +49,6 @@ $(document).ready(function() {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Setup global variables.
   //////////////////////////////////////////////////////////////////////////////////////////
-
   let bookmarker = null;
   let store = null;
 
@@ -147,65 +146,8 @@ $(document).ready(function() {
   var variable_aliases = {};
 
   //////////////////////////////////////////////////////////////////////////////////////////
-  // Setup page layout.
-  //////////////////////////////////////////////////////////////////////////////////////////
-
-  layout = $("#parameter-image-plus-layout").layout(
-  {
-    north:
-    {
-      size: 39,
-      resizable: false,
-    },
-    center:
-    {
-
-    },
-    west:
-    {
-      // Sliders
-      initClosed: true,
-      size: $("#parameter-image-plus-layout").width() / 4,
-      onresize_end: function(pane_name, pane_element, pane_state, pane_options, layout_name)
-      {
-        filter_manager.slidersPaneHeight( pane_state.innerHeight );
-      }
-    },
-    south:
-    {
-      size: $("#parameter-image-plus-layout").height() / 4,
-      resizeWhileDragging: false,
-      onresize_end: function()
-      {
-        $("#table").css("height", $("#table-pane").height());
-        if($("#table").data("parameter_image-table")) {
-          $("#table").table("resize_canvas");
-        }
-      }
-    },
-  });
-
-  $("#model-pane").layout(
-  {
-    center:
-    {
-      resizeWhileDragging: false,
-      onresize_end: function() 
-      {
-        if($("#scatterplot").data("parameter_image-scatterplot")) {
-          $("#scatterplot").scatterplot("option", {
-            width: $("#scatterplot-pane").width(),
-            height: $("#scatterplot-pane").height()
-          });
-        }
-      }
-    }
-  });
-
-  //////////////////////////////////////////////////////////////////////////////////////////
   // Get the model
   //////////////////////////////////////////////////////////////////////////////////////////
-
   // Old way
   function doPollOld(){
     $.ajax(
@@ -275,6 +217,72 @@ $(document).ready(function() {
       throw error;
     })
     ;
+  
+  //////////////////////////////////////////////////////////////////////////////////////////
+  // Setup page layout.
+  //////////////////////////////////////////////////////////////////////////////////////////
+  get_model_promise.then(() => {
+    layout = $("#parameter-space-layout").layout(
+    {
+      north:
+      {
+        size: 39,
+        resizable: false,
+      },
+      center:
+      {
+        // resizeWhileDragging: false,
+        // onresize_end: function() 
+        // {
+        //   if($("#scatterplot").data("parameter_image-scatterplot")) {
+        //     $("#scatterplot").scatterplot("option", {
+        //       width: $("#scatterplot-pane").width(),
+        //       height: $("#scatterplot-pane").height()
+        //     });
+        //   }
+        // }
+      },
+      west:
+      {
+        // Sliders
+        initClosed: true,
+        size: $("#parameter-space-layout").width() / 4,
+        onresize_end: function(pane_name, pane_element, pane_state, pane_options, layout_name)
+        {
+          filter_manager.slidersPaneHeight( pane_state.innerHeight );
+        }
+      },
+      south:
+      {
+        size: $("#parameter-space-layout").height() / 4,
+        resizeWhileDragging: false,
+        onresize_end: function()
+        {
+          $("#table").css("height", $("#table-pane").height());
+          if($("#table").data("parameter_image-table")) {
+            $("#table").table("resize_canvas");
+          }
+        }
+      },
+    });
+  
+    $("#model-pane").layout(
+    {
+      center:
+      {
+        resizeWhileDragging: false,
+        onresize_end: function() 
+        {
+          if($("#scatterplot").data("parameter_image-scatterplot")) {
+            $("#scatterplot").scatterplot("option", {
+              width: $("#scatterplot-pane").width(),
+              height: $("#scatterplot-pane").height()
+            });
+          }
+        }
+      }
+    });
+  });
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Once the model has been loaded, retrieve metadata / bookmarked state
