@@ -118,10 +118,6 @@ $(document).ready(function() {
       redux_state_tree.derived.input_columns = model["artifact:input-columns"];
       redux_state_tree.derived.output_columns = model["artifact:output-columns"];
     })
-    .catch((error) => {
-      console.log("promise rejected");
-      throw error;
-    })
     ;
 
   //////////////////////////////////////////////////////////////////////////////////////////
