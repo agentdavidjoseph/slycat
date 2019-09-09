@@ -148,57 +148,6 @@ $(document).ready(function() {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Get the model
   //////////////////////////////////////////////////////////////////////////////////////////
-  // Old way
-  function doPollOld(){
-    $.ajax(
-    {
-      type : "GET",
-      url : api_root + "models/" + model_id,
-      success : function(result)
-      {
-        model = result;
-        bookmarker = bookmark_manager.create(model.project, model._id);
-
-        input_columns = model["artifact:input-columns"];
-        output_columns = model["artifact:output-columns"];
-        image_columns = model["artifact:image-columns"];
-        rating_columns = model["artifact:rating-columns"] == undefined ? [] : model["artifact:rating-columns"];
-        category_columns = model["artifact:category-columns"] == undefined ? [] : model["artifact:category-columns"];
-        filter_manager = new FilterManager(model_id, bookmarker, layout, input_columns, output_columns, image_columns, rating_columns, category_columns);
-        if(filter_manager.active_filters_ready())
-        {
-          active_filters_ready();
-        }
-        else
-        {
-          filter_manager.active_filters_ready.subscribe(function(newValue) {
-            if(newValue)
-            {
-              active_filters_ready();
-              // Terminating subscription
-              this.dispose();
-            }
-          });
-        }
-        if(model["state"] === "waiting" || model["state"] === "running") {
-          setTimeout(doPoll, 5000);
-          return;
-        }
-        if(model["state"] === "closed" && model["result"] === null)
-          return;
-        if(model["result"] === "failed")
-          return;
-        $('.slycat-navbar-alert').remove();
-        model_loaded();
-      },
-      error: function(request, status, reason_phrase)
-      {
-        window.alert("Error retrieving model: " + reason_phrase);
-      }
-    });
-  }
-  doPollOld();
-
   let get_model_promise = doPoll(redux_state_tree.derived.model_id);
 
   // We have a completed model, so remove the navbar alert and start setting some derived state
@@ -210,18 +159,17 @@ $(document).ready(function() {
       redux_state_tree.derived.output_columns = model["artifact:output-columns"];
       redux_state_tree.derived.image_columns = model["artifact:image-columns"];
       redux_state_tree.derived.rating_columns = model["artifact:rating-columns"] == undefined ? [] : model["artifact:rating-columns"];
-      redux_state_tree.derived.category_columns = model["artifact:category-columns"] == undefined ? [] : model["artifact:category-columns"];
-    })
-    .catch((error) => {
-      console.log("promise rejected");
-      throw error;
+      redux_state_tree.derived.category_columns = 
+      model["artifact:category-columns"] == undefined ? 
+        [] : 
+        model["artifact:category-columns"];
     })
     ;
   
   //////////////////////////////////////////////////////////////////////////////////////////
   // Setup page layout.
   //////////////////////////////////////////////////////////////////////////////////////////
-  get_model_promise.then(() => {
+  get_model_promise.then((modelReturned) => {
     layout = $("#parameter-space-layout").layout(
     {
       north:
@@ -282,6 +230,32 @@ $(document).ready(function() {
         }
       }
     });
+    // Old code that needs to be factored out of here
+    model = modelReturned;
+    bookmarker = bookmark_manager.create(model.project, model._id);
+    input_columns = model["artifact:input-columns"];
+    output_columns = model["artifact:output-columns"];
+    image_columns = model["artifact:image-columns"];
+    rating_columns = model["artifact:rating-columns"] == undefined ? [] : model["artifact:rating-columns"];
+    category_columns = model["artifact:category-columns"] == undefined ? [] : model["artifact:category-columns"];
+    filter_manager = new FilterManager(model_id, bookmarker, layout, input_columns, output_columns, image_columns, rating_columns, category_columns);
+    if(filter_manager.active_filters_ready())
+    {
+      active_filters_ready();
+    }
+    else
+    {
+      filter_manager.active_filters_ready.subscribe(function(newValue) {
+        if(newValue)
+        {
+          active_filters_ready();
+          // Terminating subscription
+          this.dispose();
+        }
+      });
+    }
+    model_loaded();
+    // End of old code that needs to be factored out of here
   });
 
   //////////////////////////////////////////////////////////////////////////////////////////
