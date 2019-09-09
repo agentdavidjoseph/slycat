@@ -487,6 +487,43 @@ module.get_model = function(params)
   });
 };
 
+module.get_model_fetch = function(params, successFunction, errorFunction)
+{
+  return fetch(
+    `${api_root}modelss/${params.mid}`,
+    {
+      credentials: "same-origin",
+      cache: "no-store",
+      dataType: "json",
+    }
+  )
+  .then(function(response) {
+    // If we have a response in the range 200-299 inclusive, execute the 
+    // successFunction and return the response json
+    if(response.ok)
+    {
+      if(successFunction) {
+        successFunction(response);
+      }
+      return response.json();
+    }
+    // Otherwise thrown an error
+    throw new Error(`bad response from ${response.url} with status: ${response.status} and statusText: ${response.statusText}`);
+  })
+  .catch((error) => {
+    // Catching the error and executing the errorFunction if it exists
+    if(errorFunction) {
+      errorFunction(error)
+    }
+    // Or logging the error to the console if it doesn't
+    else {
+      console.log(error);
+    }
+    // Either way, rethrowing the error so caller can respond to it
+    throw error;
+  });
+};
+
 module.get_model_file = function(params) {
   $.ajax({
     type: 'GET',
