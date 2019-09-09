@@ -490,7 +490,7 @@ module.get_model = function(params)
 module.get_model_fetch = function(params, successFunction, errorFunction)
 {
   return fetch(
-    `${api_root}modelss/${params.mid}`,
+    `${api_root}models/${params.mid}`,
     {
       credentials: "same-origin",
       cache: "no-store",
