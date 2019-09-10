@@ -759,7 +759,7 @@ module.get_remote_file_fetch = function(params, successFunction, errorFunction)
 module.get_model_table_metadata_fetch = function(params, successFunction, errorFunction)
 {
   return fetch(
-    `${api_root}models/${params.mid}/tables/${params.aid}/arrays/${params.array || "0"}/metadata`,
+    `${api_root}models/${params.mid}/tables/${params.aid}/arrays/${params.array || "0"}/metadata${params.index ? "?index=" + params.index : "" }`,
     {
       credentials: "same-origin",
       cache: "no-store",
