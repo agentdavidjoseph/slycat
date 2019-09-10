@@ -108,106 +108,102 @@ $(document).ready(function() {
   //////////////////////////////////////////////////////////////////////////////////////////
   // Get the model
   //////////////////////////////////////////////////////////////////////////////////////////
-  let get_model_promise = doPoll(redux_state_tree.derived.model_id);
-
-  // We have a completed model, so remove the navbar alert and start setting some derived state
-  get_model_promise
+  let get_model_promise = 
+    doPoll(redux_state_tree.derived.model_id)
+    // We have a completed model, so remove the navbar alert and start setting some derived state
     .then((model) => {
       $('.slycat-navbar-alert').remove();
       redux_state_tree.derived.model = model;
       redux_state_tree.derived.input_columns = model["artifact:input-columns"];
       redux_state_tree.derived.output_columns = model["artifact:output-columns"];
     })
-    ;
-
-  //////////////////////////////////////////////////////////////////////////////////////////
-  // Setup page layout.
-  //////////////////////////////////////////////////////////////////////////////////////////
-  get_model_promise.then(() => {
-    $("#cca-model").layout({
-      applyDefaultStyles: false,
-      north:
-      {
-        size: 39,
-        resizable: false,
-      },
-      west:
-      {
-        size: $("#cca-model").width() / 2,
-        resizeWhileDragging: false,
-        onresize_end: function() { 
-          if(store)
-          {
-            store.dispatch(
-              setBarplotWidth(
-                $("#barplot-pane").width()
-              )
-            );
-            store.dispatch(
-              setBarplotHeight(
-                $("#barplot-pane").height()
-              )
-            );
-          }
-        },
-      },
-      center:
-      {
-        resizeWhileDragging: false,
-        onresize_end: function() { 
-          if(store)
-          {
-            store.dispatch(
-              setScatterplotWidth(
-                $("#scatterplot-pane").width()
-              )
-            );
-            store.dispatch(
-              setScatterplotHeight(
-                $("#scatterplot-pane").height()
-              )
-            );
-          }
-        },
-      },
-      south:
-      {
-        size: $("body").height() / 2,
-        resizeWhileDragging: false,
-        onresize_end: function()
+    // Setup page layout.
+    .then(() => {
+      $("#cca-model").layout({
+        applyDefaultStyles: false,
+        north:
         {
-          if(store)
-          {
-            store.dispatch(
-              setTableWidth(
-                $("#table-pane").width()
-              )
-            );
-            store.dispatch(
-              setTableHeight(
-                $("#table-pane").height()
-              )
-            );
-          }
+          size: 39,
+          resizable: false,
         },
-      },
-    });
-    
-    redux_state_tree.derived.scatterplot_width = $("#scatterplot-pane").width();
-    redux_state_tree.derived.scatterplot_height = $("#scatterplot-pane").height();
-    redux_state_tree.derived.table_width = $("#table-pane").width();
-    redux_state_tree.derived.table_height = $("#table-pane").height();
-    redux_state_tree.derived.barplot_width = $("#barplot-pane").width();
-    redux_state_tree.derived.barplot_height = $("#barplot-pane").height();
-  });
+        west:
+        {
+          size: $("#cca-model").width() / 2,
+          resizeWhileDragging: false,
+          onresize_end: function() { 
+            if(store)
+            {
+              store.dispatch(
+                setBarplotWidth(
+                  $("#barplot-pane").width()
+                )
+              );
+              store.dispatch(
+                setBarplotHeight(
+                  $("#barplot-pane").height()
+                )
+              );
+            }
+          },
+        },
+        center:
+        {
+          resizeWhileDragging: false,
+          onresize_end: function() { 
+            if(store)
+            {
+              store.dispatch(
+                setScatterplotWidth(
+                  $("#scatterplot-pane").width()
+                )
+              );
+              store.dispatch(
+                setScatterplotHeight(
+                  $("#scatterplot-pane").height()
+                )
+              );
+            }
+          },
+        },
+        south:
+        {
+          size: $("body").height() / 2,
+          resizeWhileDragging: false,
+          onresize_end: function()
+          {
+            if(store)
+            {
+              store.dispatch(
+                setTableWidth(
+                  $("#table-pane").width()
+                )
+              );
+              store.dispatch(
+                setTableHeight(
+                  $("#table-pane").height()
+                )
+              );
+            }
+          },
+        },
+      });
+      
+      redux_state_tree.derived.scatterplot_width = $("#scatterplot-pane").width();
+      redux_state_tree.derived.scatterplot_height = $("#scatterplot-pane").height();
+      redux_state_tree.derived.table_width = $("#table-pane").width();
+      redux_state_tree.derived.table_height = $("#table-pane").height();
+      redux_state_tree.derived.barplot_width = $("#barplot-pane").width();
+      redux_state_tree.derived.barplot_height = $("#barplot-pane").height();
+    })
+    ;
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Get other model data
   //////////////////////////////////////////////////////////////////////////////////////////
 
   // Create a bookmarker and get state from it
-  let bookmarker_promise = new Promise(function(resolve, reject){
-    get_model_promise.then(function(){
+  let bookmarker_promise = get_model_promise
+    .then(() => new Promise(function(resolve, reject) {
       // Create the bookmarker now that we have the project
       bookmarker = bookmark_manager.create(
         redux_state_tree.derived.model.project, 
@@ -258,30 +254,35 @@ $(document).ready(function() {
         resolve(bookmark);
       });
     })
-  });
+  );
 
   // Load data table metadata.
-  let table_metadata_promise = new Promise(function(resolve, reject) {
-    get_model_promise.then(function(){
-      client.get_model_table_metadata({
+  let table_metadata_promise = get_model_promise
+    .then(() => 
+      client.get_model_table_metadata_fetch({
         mid: redux_state_tree.derived.model_id,
         aid: "data-table",
         index: "Index",
-        success: function(table_metadata)
-        {
-          redux_state_tree.derived.table_metadata = table_metadata;
-          redux_state_tree.variable_selected = table_metadata["column-count"] - 1;
-          resolve();
-        },
-        error: reject
-      });
+      })
+    )
+    .then(table_metadata => {
+      redux_state_tree.derived.table_metadata = table_metadata;
+      redux_state_tree.variable_selected = table_metadata["column-count"] - 1;
     })
-  });
+    // Example code for adding delay to the resolutions of a promise
+    // .then(() => new Promise(function(resolve, reject){
+    //   setTimeout(() => {
+    //     console.log('Done with timeout, about to resolve...')
+    //     resolve();
+    //   }, 5000);
+    // }))
+    ;
+
 
   Promise.all([
     table_metadata_promise, 
     get_model_promise])
-  .then(function(){
+  .then(() => {
     let other_columns = [];
     for(let i = 0; i != redux_state_tree.derived.table_metadata["column-count"] - 1; ++i)
     {
@@ -319,8 +320,8 @@ $(document).ready(function() {
   });
 
   // Load the x_loadings artifact.
-  let x_loadings_promise = new Promise(function(resolve, reject) {
-    get_model_promise.then(function(){
+  let x_loadings_promise = get_model_promise
+    .then(() => new Promise(function(resolve, reject) {
       chunker.get_model_array_attribute({
         api_root : api_root,
         mid : redux_state_tree.derived.model_id,
@@ -335,11 +336,11 @@ $(document).ready(function() {
         error : reject,
       });
     })
-  });
+  );
 
   // Load the y_loadings artifact.
-  let y_loadings_promise = new Promise(function(resolve, reject) {
-    get_model_promise.then(function(){
+  let y_loadings_promise = get_model_promise
+    .then(() => new Promise(function(resolve, reject) {
       chunker.get_model_array_attribute({
         api_root : api_root,
         mid : redux_state_tree.derived.model_id,
@@ -354,11 +355,11 @@ $(document).ready(function() {
         error : reject
       });
     })
-  });
+  );
 
   // Load the r^2 statistics artifact.
-  let r2_promise = new Promise(function(resolve, reject) {
-    get_model_promise.then(function(){
+  let r2_promise = get_model_promise
+    .then(() => new Promise(function(resolve, reject) {
       chunker.get_model_array_attribute({
         api_root : api_root,
         mid : redux_state_tree.derived.model_id,
@@ -373,11 +374,11 @@ $(document).ready(function() {
         error : reject
       });
     })
-  });
+  );
 
   // Load the Wilks statistics artifact.
-  let wilks_promise = new Promise(function(resolve, reject) {
-    get_model_promise.then(function(){
+  let wilks_promise = get_model_promise
+    .then(() => new Promise(function(resolve, reject) {
       chunker.get_model_array_attribute({
         api_root : api_root,
         mid : redux_state_tree.derived.model_id,
@@ -392,11 +393,11 @@ $(document).ready(function() {
         error : reject
       });
     })
-  });
+  );
 
   // Load the canonical-indices artifact.
-  let indices_promise = new Promise(function(resolve, reject) {
-    get_model_promise.then(function(){
+  let indices_promise = get_model_promise
+    .then(() => new Promise(function(resolve, reject) {
       chunker.get_model_array_attribute({
         api_root : api_root,
         mid : redux_state_tree.derived.model_id,
@@ -415,7 +416,7 @@ $(document).ready(function() {
           // once we have table_metadata
           // console.log('indices_promise error');
           table_metadata_promise
-            .then(function(){
+            .then(() => {
               let count = redux_state_tree.derived.table_metadata["row-count"];
               let indices = new Int32Array(count);
               for(let i = 0; i != count; ++i) {
@@ -432,11 +433,11 @@ $(document).ready(function() {
         }
       });
     })
-  });
+  );
 
   // Load the canonical-variables artifacts.
-  let x_promise = new Promise(function(resolve, reject) {
-    get_model_promise.then(function(){
+  let x_promise = get_model_promise
+    .then(() => new Promise(function(resolve, reject) {
       chunker.get_model_array_attribute({
         api_root : api_root,
         mid : redux_state_tree.derived.model_id,
@@ -451,10 +452,10 @@ $(document).ready(function() {
         error : reject
       });
     })
-  });
+  );
 
-  let y_promise = new Promise(function(resolve, reject) {
-    get_model_promise.then(function(){
+  let y_promise = get_model_promise
+    .then(() => new Promise(function(resolve, reject) {
       chunker.get_model_array_attribute({
         api_root : api_root,
         mid : redux_state_tree.derived.model_id,
@@ -469,7 +470,7 @@ $(document).ready(function() {
         error : reject
       });
     })
-  });
+  );
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Once all promises have resolved, set up redux
