@@ -90,19 +90,19 @@ class CCATable extends React.Component {
 
   _color_variable = (variable) =>
   {
-    let self = this;
-
-    var columns = self.grid.getColumns();
+    var columns = this.grid.getColumns();
     for(var i in columns)
     {
       var column = columns[i];
       if(this.props.colormap !== null && column.id == variable)
       {
         // Make a copy of our global colormap, then adjust its domain to match our column-specific data.
-        column.colormap = self.props.colormap.copy();
+        column.colormap = this.props.colormap.copy();
 
         var new_domain = []
-        var domain_scale = d3.scale.linear().domain([0, column.colormap.range().length]).range([self.props.metadata["column-min"][column.id], self.props.metadata["column-max"][column.id]]);
+        var domain_scale = d3.scale.linear()
+          .domain([0, column.colormap.range().length])
+          .range([this.props.metadata["column-min"][column.id], this.props.metadata["column-max"][column.id]]);
         for(var i in column.colormap.range())
           new_domain.push(domain_scale(i));
         column.colormap.domain(new_domain);
@@ -116,21 +116,19 @@ class CCATable extends React.Component {
       }
     }
 
-    self.grid.invalidate();
+    this.grid.invalidate();
   }
 
   set_sort = (column, order) =>
   {
-    let self = this;
-
     // Dispatch setVariableSorted action whenever header is clicked.
-    self.props.setVariableSorted(column);
+    this.props.setVariableSorted(column);
 
-    self.data.set_sort(column, order);
-    self.data.get_indices("sorted", self.props.row_selection, function(sorted_rows)
+    this.data.set_sort(column, order);
+    this.data.get_indices("sorted", this.props.row_selection, (sorted_rows) =>
     {
-      self.grid.invalidate();
-      table_helpers._set_selected_rows_no_trigger(self);
+      this.grid.invalidate();
+      table_helpers._set_selected_rows_no_trigger(this);
     });
   }
 
@@ -140,31 +138,29 @@ class CCATable extends React.Component {
   }
 
   componentDidMount() {
-    let self = this;
-
     this.grid = new Slick.Grid(this.cca_table.current, this.data, this.columns, {explicitInitialization : true, enableColumnReorder : false});
 
-    this.data.onDataLoaded.subscribe(function (e, args) {
+    this.data.onDataLoaded.subscribe((e, args) => {
       for (var i = args.from; i <= args.to; i++) {
-        self.grid.invalidateRow(i);
+        this.grid.invalidateRow(i);
       }
-      self.grid.render();
+      this.grid.render();
     });
 
     let header_buttons = new Slick.Plugins.HeaderButtons();
-    header_buttons.onCommand.subscribe(function(e, args)
+    header_buttons.onCommand.subscribe((e, args) =>
     {
       var column = args.column;
       var button = args.button;
       var command = args.command;
       var grid = args.grid;
 
-      for(var i in self.columns)
+      for(var i in this.columns)
       {
-        self.columns[i].header.buttons[0].cssClass = "icon-sort-off";
-        self.columns[i].header.buttons[0].tooltip = "Sort ascending";
-        self.columns[i].header.buttons[0].command = "sort-ascending";
-        grid.updateColumnHeader(self.columns[i].id);
+        this.columns[i].header.buttons[0].cssClass = "icon-sort-off";
+        this.columns[i].header.buttons[0].tooltip = "Sort ascending";
+        this.columns[i].header.buttons[0].command = "sort-ascending";
+        grid.updateColumnHeader(this.columns[i].id);
       }
 
       if(command == "sort-ascending")
@@ -172,14 +168,14 @@ class CCATable extends React.Component {
         button.cssClass = 'icon-sort-ascending';
         button.command = 'sort-descending';
         button.tooltip = 'Sort descending';
-        self.set_sort(column.id, "ascending");
+        this.set_sort(column.id, "ascending");
       }
       else if(command == "sort-descending")
       {
         button.cssClass = 'icon-sort-descending';
         button.command = 'sort-ascending';
         button.tooltip = 'Sort ascending';
-        self.set_sort(column.id, "descending");
+        this.set_sort(column.id, "descending");
       }
     });
 
@@ -187,24 +183,24 @@ class CCATable extends React.Component {
     this.grid.registerPlugin(new Slick.AutoTooltips({enableForHeaderCells:true}));
 
     this.grid.setSelectionModel(new Slick.RowSelectionModel());
-    this.grid.onSelectedRowsChanged.subscribe(function(e, selection)
+    this.grid.onSelectedRowsChanged.subscribe((e, selection) =>
     {
-      self.data.get_indices("unsorted", selection.rows, function(unsorted_rows)
+      this.data.get_indices("unsorted", selection.rows, (unsorted_rows) =>
       {
         // Need to convert to a normal Array because sometimes unsorted_rows comes back as
         // an Int32Array, which does not bookmark correctly.
         let unsorted_rows_array = Array.from(unsorted_rows);
-        self.props.setSimulationsSelected(unsorted_rows_array);
+        this.props.setSimulationsSelected(unsorted_rows_array);
       });
     });
-    this.grid.onHeaderClick.subscribe(function (e, args)
+    this.grid.onHeaderClick.subscribe((e, args) =>
     {
       // Dispatch setVariableSelected action whenever header is clicked.
       // When it's the same variable as current, react doesn't update any components
       // so no need to check for it here.
-      if (self.props.metadata["column-types"][args.column.id] != "string")
+      if (this.props.metadata["column-types"][args.column.id] != "string")
       {
-        self.props.setVariableSelected(args.column.field);
+        this.props.setVariableSelected(args.column.field);
       }
     });
 
@@ -228,11 +224,10 @@ class CCATable extends React.Component {
     // First check if props.row_selection changed during this update
     if(_.xor(prevProps.row_selection, this.props.row_selection).length > 0) {
       // Then check if the selected rows aren't already selected in the grid
-      let self = this;
-      this.data.get_indices("unsorted", this.grid.getSelectedRows(), function(unsorted_rows)
+      this.data.get_indices("unsorted", this.grid.getSelectedRows(), (unsorted_rows) =>
       {
-        if(_.xor(unsorted_rows, self.props.row_selection).length > 0) {
-          table_helpers._set_selected_rows_no_trigger(self);
+        if(_.xor(unsorted_rows, this.props.row_selection).length > 0) {
+          table_helpers._set_selected_rows_no_trigger(this);
         }
       });
     }
