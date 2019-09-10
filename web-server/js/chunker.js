@@ -9,32 +9,6 @@ export function is_little_endian()
   return window.result;
 }
 
-// Retrieve an array attribute's metadata asynchronously, calling a callback when it's ready ...
-export function get_model_array_attribute_metadata(parameters, dfd)
-{
-  return $.ajax({
-    url : parameters.api_root + "models/" + parameters.mid + "/arraysets/" + parameters.aid + "/metadata?arrays=" + parameters.array,
-    contentType : "application/json",
-    success: function(result)
-    {
-      parameters.metadata = result.arrays[0];
-      if(parameters.metadataSuccess !== undefined) {
-        parameters.metadataSuccess(parameters);
-      } else {
-        parameters.success(parameters);
-      }
-    },
-    error: function(request, status, reason_phrase)
-    {
-      if(parameters.error)
-        parameters.error(request, status, reason_phrase);
-    },
-    always: function() {
-      dfd.resolve();
-    }
-  });
-}
-
 // Cast a generic arraybuffer to a typed array, with an optional offset and
 // count.  Note that offset and count are measured in elements, not bytes.
 export function cast_array_buffer(buffer, type, offset, count)
@@ -97,6 +71,32 @@ export function cast_array_buffer(buffer, type, offset, count)
   }
   else
     console.error("Unknown array buffer type: " + type);
+}
+
+// Retrieve an array attribute's metadata asynchronously, calling a callback when it's ready ...
+export function get_model_array_attribute_metadata(parameters, dfd)
+{
+  return $.ajax({
+    url : parameters.api_root + "models/" + parameters.mid + "/arraysets/" + parameters.aid + "/metadata?arrays=" + parameters.array,
+    contentType : "application/json",
+    success: function(result)
+    {
+      parameters.metadata = result.arrays[0];
+      if(parameters.metadataSuccess !== undefined) {
+        parameters.metadataSuccess(parameters);
+      } else {
+        parameters.success(parameters);
+      }
+    },
+    error: function(request, status, reason_phrase)
+    {
+      if(parameters.error)
+        parameters.error(request, status, reason_phrase);
+    },
+    always: function() {
+      dfd.resolve();
+    }
+  });
 }
 
 // Retrieve an array attribute asynchronously, calling a callback when it's ready ...
@@ -181,4 +181,3 @@ export function get_model_array_attribute(parameters) {
     request.send();
   }
 }
-

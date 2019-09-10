@@ -256,7 +256,7 @@ $(document).ready(function() {
     })
   );
 
-  // Load data table metadata.
+  // Load data table metadata once we have the model
   let table_metadata_promise = get_model_promise
     .then(() => 
       client.get_model_table_metadata_fetch({
