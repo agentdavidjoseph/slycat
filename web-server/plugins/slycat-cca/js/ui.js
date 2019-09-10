@@ -278,11 +278,13 @@ $(document).ready(function() {
     // }))
     ;
 
-
+  // Set up other columns and color variables once we have table metadata and the model
   Promise.all([
+    get_model_promise,
     table_metadata_promise, 
-    get_model_promise])
+  ])
   .then(() => {
+    // Create other columns (i.e., non-input and non-output columns)
     let other_columns = [];
     for(let i = 0; i != redux_state_tree.derived.table_metadata["column-count"] - 1; ++i)
     {
@@ -293,6 +295,7 @@ $(document).ready(function() {
     }
     redux_state_tree.derived.other_columns = other_columns;
 
+    // Create color variables by combining the index column, inputs, outputs, and other columns
     let color_variables = [];
     // Last column is the index, so it goes first
     color_variables.push(redux_state_tree.derived.table_metadata["column-count"] - 1);
