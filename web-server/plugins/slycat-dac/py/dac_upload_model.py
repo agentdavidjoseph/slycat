@@ -17,6 +17,7 @@ import cherrypy
 
 # database, model are the slycat database and model to use for the upload
 # parse_error_log is the progress so far to be reported in the dac upload window
+# dac-uploading-progress starts at 70%
 # meta_column_names are the names of the metadata columns
 # meta_rows are the rows of the metadata table
 # meta_var_col_names are the names of the variable metadata columns
@@ -30,18 +31,24 @@ def init_upload_model (database, model, parse_error_log, meta_column_names, meta
     # convert from meta data from row-oriented to column-oriented data,
     # and convert to numeric columns where possible.
     meta_column_types = ["string" for name in meta_column_names]
-    meta_columns = zip(*meta_rows)
+    meta_columns = list(zip(*meta_rows))
     for index in range(len(meta_columns)):
         try:
             meta_columns[index] = numpy.array(meta_columns[index], dtype="float64")
-            meta_column_types[index] = "float64"
+
+            # if there are any nan values using strings instead
+            if numpy.any(numpy.isnan(meta_columns[index])):
+                meta_columns[index] = numpy.array(meta_columns[index], dtype="str")
+            else:
+                meta_column_types[index] = "float64"
+
         except:
-            meta_columns[index] = numpy.array(meta_columns[index], dtype="string")
+            meta_columns[index] = numpy.array(meta_columns[index], dtype="str")
 
     # convert variable meta data from row-oriented to column-oriented data
-    meta_var_cols = zip(*meta_vars)
+    meta_var_cols = list(zip(*meta_vars))
     for index in range(len(meta_var_cols)):
-        meta_var_cols[index] = numpy.array(meta_var_cols[index], dtype="string")
+        meta_var_cols[index] = numpy.array(meta_var_cols[index], dtype="str")
 
     # get total number of variables
     num_vars = len(meta_vars)
@@ -57,7 +64,7 @@ def init_upload_model (database, model, parse_error_log, meta_column_names, meta
     # Push DAC variables to slycat server
     # -----------------------------------
 
-    # starting uploads (30%)
+    # starting uploads (70%)
     slycat.web.server.put_model_parameter(database, model, "dac-polling-progress", ["Uploading ...", 70.0])
 
     # push error log to database

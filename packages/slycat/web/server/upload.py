@@ -37,7 +37,6 @@ import shutil
 import slycat.web.server.authentication
 import slycat.web.server.database
 
-import StringIO
 import threading
 import time
 import uuid
@@ -184,11 +183,36 @@ class Session(object):
       storage = path(self._uid)
       for file_dir in sorted(glob.glob(os.path.join(storage, "file-*")), key=numeric_order):
         # cherrypy.log.error("Assembling %s" % file_dir)
-        file = ""
+
+        is_bin_file = False
+        file_parts = []
+
         for file_part in sorted(glob.glob(os.path.join(file_dir, "part-*")), key=numeric_order):
           # cherrypy.log.error(" Loading %s" % file_part)
-          with open(file_part, "r") as f:
-            file += f.read()
+
+          # is this a text file?
+          if is_bin_file == False:
+
+            # try to open as text file
+            try:
+              with open(file_part, "r") as f:
+                file_parts.append(f.read())
+
+            # not a text file, open as binary
+            except UnicodeDecodeError:
+              is_bin_file = True
+
+          # is it a binary file?
+          if is_bin_file == True:
+            with open(file_part, "rb") as f:
+              file_parts.append(f.read())
+
+        # join file parts to make full file
+        if is_bin_file == False:
+          file = ''.join(file_parts)
+        else:
+          file = b''.join(file_parts)
+
         files.append(file)
 
       try:

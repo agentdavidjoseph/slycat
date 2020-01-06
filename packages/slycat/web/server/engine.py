@@ -3,7 +3,7 @@
 # retains certain rights in this software.
 
 import cherrypy
-import ConfigParser
+import configparser
 import datetime
 import grp
 import json
@@ -44,7 +44,7 @@ def start(root_path, config_file):
 
   # below, simply tell engine to watch config file for potential reload, reloading may be ON or OFF
   cherrypy.engine.autoreload.files.add(config_file)
-  parser = ConfigParser.SafeConfigParser()
+  parser = configparser.SafeConfigParser()
   parser.read(config_file)
   configuration = {section : {key : eval(value) for key, value in parser.items(section)} for section in parser.sections()}
   configuration["slycat-web-server"]["root-path"] = root_path
@@ -79,6 +79,9 @@ def start(root_path, config_file):
   dispatcher.connect("delete-upload", "/uploads/:uid", slycat.web.server.handlers.delete_upload, conditions={"method" : ["DELETE"]})
   dispatcher.connect("delete-logout", "/logout", slycat.web.server.handlers.logout, conditions={"method" : ["DELETE"]})
   dispatcher.connect("delete-remote", "/remotes/:sid", slycat.web.server.handlers.delete_remote, conditions={"method" : ["DELETE"]})
+  dispatcher.connect("delete-project-data", "/projects/data/:did", slycat.web.server.handlers.delete_project_data, conditions={"method" : ["DELETE"]})
+  dispatcher.connect("delete-project-data-in-model", "/projects/data/:did/model/:mid", slycat.web.server.handlers.delete_project_data_in_model, conditions={"method" : ["DELETE"]})
+  dispatcher.connect("delete-model-in-project-data", "/model/:mid/projects/data/:did", slycat.web.server.handlers.delete_model_in_project_data, conditions={"method" : ["DELETE"]})
 
   dispatcher.connect("get-time-series-names", "/remotes/:hostname/time_series_names/file{path:.*}", slycat.web.server.handlers.get_time_series_names, conditions={"method" : ["GET"]})
   dispatcher.connect("get-bookmark", "/bookmarks/:bid", slycat.web.server.handlers.get_bookmark, conditions={"method" : ["GET"]})
@@ -107,10 +110,12 @@ def start(root_path, config_file):
   dispatcher.connect("get-projects", "/projects", slycat.web.server.handlers.get_projects_list, conditions={"method" : ["GET"]})
   dispatcher.connect("get-projects-list", "/projects_list", slycat.web.server.handlers.get_projects_list, conditions={"method" : ["GET"]})
   dispatcher.connect("put-project-csv-data", "/projects/:pid/data/:file_key/parser/:parser/mid/:mid/aids/:aids", slycat.web.server.handlers.put_project_csv_data, conditions={"method": ["PUT"]})
-  dispatcher.connect("get-project-data", "/data/:did", slycat.web.server.handlers.get_project_data, conditions={"method": ["GET"]})
+  dispatcher.connect("get-project-data", "/projects/data/:did", slycat.web.server.handlers.get_project_data, conditions={"method": ["GET"]})
   dispatcher.connect("put-project-data-parameter", "/data/:did/aids/:aid", slycat.web.server.handlers.put_project_data_parameter, conditions={"method": ["PUT"]})
   dispatcher.connect("post-project-data", "/projects/data/:pid", slycat.web.server.handlers.create_project_data_from_pid, conditions={"method": ["POST"]})
+  dispatcher.connect("get-project-data-in-model", "/projects/data/model/:mid", slycat.web.server.handlers.get_project_data_in_model, conditions={"method": ["GET"]})
   dispatcher.connect("get-project-file-names", "/projects/:pid/name", slycat.web.server.handlers.get_project_file_names, conditions={"method": ["GET"]})
+  dispatcher.connect("get-project-data-parameter", "/projects/data/:did/parameters/:param", slycat.web.server.handlers.get_project_data_parameter, conditions={"method": ["GET"]})
   #TODO: scrub sid
   dispatcher.connect("get-remote-file", "/remotes/:hostname/file{path:.*}", slycat.web.server.handlers.get_remote_file, conditions={"method" : ["GET"]})
 
@@ -197,12 +202,15 @@ def start(root_path, config_file):
   configuration["/"]["request.dispatch"] = dispatcher
   configuration["/"]["tools.caching.on"] = True
   configuration["/"]["tools.caching.delay"] = 3600
+  configuration["/"]["tools.encode.on"] = True
+  configuration["/"]["tools.encode.encoding"] = 'utf-8'
+  configuration["/"]["tools.encode.text_only"] = False
 
   # wsgi: look at the auth below
   authentication = configuration["slycat-web-server"]["authentication"]["plugin"]
   configuration["/"]["tools.%s.on" % authentication] = True
   # configuration["/logout"]["tools.%s.on" % authentication] = False
-  for key, value in configuration["slycat-web-server"]["authentication"]["kwargs"].items():
+  for key, value in list(configuration["slycat-web-server"]["authentication"]["kwargs"].items()):
     configuration["/"]["tools.%s.%s" % (authentication, key)] = value
 
   # Setup our static content directories.
@@ -229,14 +237,14 @@ def start(root_path, config_file):
 
   # Sanity-check to ensure that we have a marking plugin for every allowed marking type.
   for allowed_marking in configuration["slycat-web-server"]["allowed-markings"]:
-    if allowed_marking not in manager.markings.keys():
+    if allowed_marking not in list(manager.markings.keys()):
       cherrypy.log.error("slycat.web.server.engine.py start", "No marking plugin for type: %s" % allowed_marking)
       raise Exception("No marking plugin for type: %s" % allowed_marking)
 
   # Setup the requested directory plugin.
   # wsgi: this is the ldap fn to lookup a username and rtn/cache uid, name, email
   directory_type = configuration["slycat-web-server"]["directory"]["plugin"]
-  if directory_type not in manager.directories.keys():
+  if directory_type not in list(manager.directories.keys()):
     cherrypy.log.error("slycat.web.server.engine.py start", "No directory plugin for type: %s" % directory_type)
     raise Exception("No directory plugin for type: %s" % directory_type)
   directory_args = configuration["slycat-web-server"]["directory"].get("args", [])

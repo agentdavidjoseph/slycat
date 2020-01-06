@@ -1,2 +1,13 @@
-flask
-redis<3.0.0
+cherrypy
+numpy
+paramiko
+pkgconfig
+h5py
+pyparsing
+couchdb
+configparser
+future
+routes
+scipy
+npTDMS
+pandas

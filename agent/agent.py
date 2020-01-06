@@ -11,9 +11,9 @@ import PIL.Image
 import argparse
 
 try:
-    import cStringIO as StringIO
+    import io as StringIO
 except ImportError:
-    import StringIO
+    import io
 
 import datetime
 import errno
@@ -30,18 +30,29 @@ import traceback
 import uuid
 import abc
 import logging
-import ConfigParser
+import configparser
 import glob
 import base64
+import numpy
 
 session_cache = {}
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, numpy.integer):
+            return int(obj)
+        elif isinstance(obj, numpy.floating):
+            return float(obj)
+        elif isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        elif type(obj) is bytes:
+            return str(obj.decode())
+        else:
+            return super(MyEncoder, self).default(obj)
 
-
-class Agent(object):
+class Agent(object, metaclass=abc.ABCMeta):
     """
     This class is an interface for agent functionality on a cluster server
     """
-    __metaclass__ = abc.ABCMeta
     _log_lock = threading.Lock()
     _loggers = {}
 
@@ -219,7 +230,7 @@ class Agent(object):
         rc = os.path.expanduser('~') + "/.slycatrc"
         if os.path.isfile(rc):
             try:
-                parser = ConfigParser.RawConfigParser()
+                parser = configparser.RawConfigParser()
                 parser.read(rc)
                 configuration = {section: {key: eval(value) for key, value in parser.items(section)} for section in
                                  parser.sections()}
@@ -232,7 +243,7 @@ class Agent(object):
             results["config"] = "see errors"
             results["errors"] = "the user does not have a .slycatrc file under their home directory"
 
-        sys.stdout.write("%s\n" % json.dumps(results))
+        sys.stdout.write("%s\n" % json.dumps(results, cls=MyEncoder))
         sys.stdout.flush()
 
     def set_user_config(self, command):
@@ -255,7 +266,7 @@ class Agent(object):
         with open(rc, "w+") as rc_file:
             rc_file.seek(0)
             rc_file.truncate()
-            parser = ConfigParser.RawConfigParser()
+            parser = configparser.RawConfigParser()
             for section_key in config:
                 if not parser.has_section(section_key):
                     parser.add_section(section_key)
@@ -264,7 +275,7 @@ class Agent(object):
                     if not str(section[option_key]) == "":
                         parser.set(section_key, option_key, "\"%s\"" % section[option_key])
             parser.write(rc_file)
-        sys.stdout.write("%s\n" % json.dumps(results))
+        sys.stdout.write("%s\n" % json.dumps(results, cls=MyEncoder))
         sys.stdout.flush()
 
     # Handle the 'browse' command.
@@ -324,7 +335,7 @@ class Agent(object):
             listing["mtimes"].append(datetime.datetime.fromtimestamp(fstat.st_mtime).isoformat())
             listing["mime-types"].append(mime_type)
 
-        sys.stdout.write("%s\n" % json.dumps(listing))
+        sys.stdout.write("%s\n" % json.dumps(listing, cls=MyEncoder))
         sys.stdout.flush()
 
     # Handle the 'get-file' command.
@@ -352,10 +363,9 @@ class Agent(object):
             raise Exception(e.message)
 
         content_type, encoding = slycat.mime_type.guess_type(path)
-        sys.stdout.write("%s\n%s" % (json.dumps(
-            {"ok": True, "message": "File retrieved.", "path": path, "content-type": content_type,
-             "size": len(file_content)}),
-                                     file_content))
+        self.get_job_logger("slycat_agent")(str(type(file_content)))
+        encoded_file_content = base64.b64encode(file_content).decode('utf-8')
+        sys.stdout.write("%s\n" % (json.dumps({"ok": True, "message": "File retrieved.", "path": path, "content-type": content_type,"size": len(file_content), "content": encoded_file_content}, cls=MyEncoder)))
         sys.stdout.flush()
 
     # Handle the 'write-file' command.
@@ -393,7 +403,7 @@ class Agent(object):
             raise Exception(e.message)
         self.get_job_logger("slycat_agent")("getting ")    
         content_type, encoding = slycat.mime_type.guess_type(path)
-        sys.stdout.write("%s\n" % (json.dumps({"ok": True, "message": "File written.", "path": path, "content-type": content_type})))
+        sys.stdout.write("%s\n" % (json.dumps({"ok": True, "message": "File written.", "path": path, "content-type": content_type}, cls=MyEncoder)))
         sys.stdout.flush()
 
     # Handle the 'get-image' command.
@@ -425,7 +435,7 @@ class Agent(object):
             content_type, encoding = slycat.mime_type.guess_type(path)
             sys.stdout.write("%s\n%s" % (json.dumps(
                 {"ok": True, "message": "Image retrieved.", "path": path, "content-type": content_type,
-                 "size": len(content)}), content))
+                 "size": len(content)}, cls=MyEncoder), content))
             sys.stdout.flush()
             return
 
@@ -450,7 +460,7 @@ class Agent(object):
             image.thumbnail(size=size, resample=PIL.Image.ANTIALIAS)
 
         # Save the image to the requested format.
-        content = StringIO.StringIO()
+        content = io.StringIO()
         if requested_content_type == "image/jpeg":
             image.save(content, "JPEG")
         elif requested_content_type == "image/png":
@@ -459,7 +469,7 @@ class Agent(object):
         # Send the results back to the caller.
         sys.stdout.write("%s\n%s" % (json.dumps(
             {"ok": True, "message": "Image retrieved.", "path": path, "content-type": requested_content_type,
-             "size": len(content.getvalue())}), content.getvalue()))
+             "size": len(content.getvalue())}, cls=MyEncoder), content.getvalue()))
         sys.stdout.flush()
 
     def run(self):
@@ -490,7 +500,7 @@ class Agent(object):
                     with open(_) as in_file:
                         self.scripts.append(json.load(in_file))
         # Let the caller know we're ready to handle commands.
-        sys.stdout.write("%s\n" % json.dumps({"ok": True, "message": "Ready."}))
+        sys.stdout.write("%s\n" % json.dumps({"ok": True, "message": "Ready."}, cls=MyEncoder))
         sys.stdout.flush()
 
         while True:
@@ -534,7 +544,7 @@ class Agent(object):
                     self.get_image(command)
                 elif action == "create-video":
                     sys.stdout.write("%s\n" % json.dumps({"ok": False, "message": "this command is depricated and has "
-                                                                                  "been removed"}))
+                                                                                  "been removed"}, cls=MyEncoder))
                     sys.stdout.flush()
                 elif action == "launch":
                     self.launch(command)
@@ -561,9 +571,10 @@ class Agent(object):
                     raise Exception("Unknown command.")
             except Exception as e:
                 if debug:
-                    sys.stdout.write("%s\n" % json.dumps({"ok": False, "message": traceback.format_exc()}))
+                    self.get_job_logger("slycat_agent")("%s\n" % json.dumps({"ok": False, "message": traceback.format_exc()}))
+                    sys.stdout.write("%s\n" % json.dumps({"ok": False, "message": traceback.format_exc()}, cls=MyEncoder))
                 else:
-                    sys.stdout.write("%s\n" % json.dumps({"ok": False, "message": e.message}))
+                    sys.stdout.write("%s\n" % json.dumps({"ok": False, "message": e.message}, cls=MyEncoder))
                 sys.stdout.flush()
 
 

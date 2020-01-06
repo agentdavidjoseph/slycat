@@ -6,7 +6,6 @@
 
 import api_root from "js/slycat-api-root";
 import client from "js/slycat-web-client";
-import * as dialog from "js/slycat-dialog";
 import markings from "js/slycat-markings";
 import ko from "knockout";
 import d3 from "d3";
@@ -388,7 +387,7 @@ function constructor(params)
                     },
                     error: function () {
 
-                        $("#dac-upload-cats-error").text("Server Error: Could not load the category list."); +
+                        $("#dac-upload-cats-error").text("Server error: could not load the category list."); +
                         $("#dac-upload-cats-error").show();
                         $('.browser-continue').toggleClass("disabled", false);
 
@@ -549,7 +548,7 @@ function constructor(params)
     // very last function called to launch model
     component.go_to_model = function() {
         // launch model
-        $(".modal-dialog").removeClass("modal-lg");
+        // $(".modal-dialog").removeClass("modal-lg");
         location = 'models/' + component.model._id();
     };
 

@@ -28,6 +28,7 @@ memory use manageable.
 """
 
 import numpy
+import cherrypy
 
 
 class Prototype(object):
@@ -150,7 +151,7 @@ class MemArray(Stub):
     self._data[attribute][slice] = data
 
 def _require_attribute_name(name):
-  if not isinstance(name, basestring):
+  if not isinstance(name, str):
     cherrypy.log.error("darray.py _require_attribute_name", "Attribute name must be a string.")
     raise ValueError("Attribute name must be a string.")
   return name
@@ -163,7 +164,7 @@ def _require_attribute_type(type):
 _require_attribute_type.allowed_types = set(["int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float32", "float64", "string", "bool"])
 
 def _require_dimension_name(name):
-  if not isinstance(name, basestring):
+  if not isinstance(name, str):
     cherrypy.log.error("darray.py _require_attribute_name", "Dimension name must be a string.")
     raise ValueError("Dimension name must be a string.")
   return name
@@ -176,7 +177,7 @@ def _require_dimension_type(type):
 _require_dimension_type.allowed_types = set(["int64"])
 
 def _require_dimension_bound(bound):
-  if not isinstance(bound, int):
+  if not isinstance(bound, int) and type(bound) is not numpy.int64:
     cherrypy.log.error("darray.py _require_dimension_bound", "Dimension bound must be an integer.")
     raise ValueError("Dimension bound must be an integer.")
   return bound
