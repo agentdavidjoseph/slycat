@@ -16,8 +16,6 @@ import DataUI from "./Components/DataUI.tsx";
 import URI from "urijs";
 import * as chunker from "js/chunker";
 
-import { createStore } from 'redux';
-import slycat from './reducers';
 
 // Wait for document ready
 $(document).ready(function() {

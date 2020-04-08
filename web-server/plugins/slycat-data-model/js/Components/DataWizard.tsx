@@ -45,6 +45,7 @@ export default class DataWizard extends React.Component<DataWizardProps, DataWiz
     );
     return mid===''?createButton:null;
   }
+  // client.delete_model_fetch({ mid: component.model._id() })
   render() {
     return (
     	<div className="justify-content-center mt-4">
