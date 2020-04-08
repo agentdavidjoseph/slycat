@@ -10,6 +10,7 @@ import 'plugins/slycat-model-wizards/slycat-model-wizards';
 import 'plugins/slycat-project-wizards/slycat-project-wizards';
 
 // Models
+import 'plugins/slycat-data-model/slycat-data-model';
 import 'plugins/slycat-parameter-image/slycat-parameter-image';
 import 'plugins/slycat-timeseries-model/slycat-timeseries-model';
 import 'plugins/slycat-cca/slycat-cca';
@@ -28,7 +29,7 @@ export async function loadTemplate(name, format) {
   // console.log("loadModelTemplate, page.model_type is " + page.model_type);
 
   let html = "";
-
+  console.log(`loadTemplate name ${name}`);
   switch(name) {
     case "parameter-image":
       html = await import(/* webpackChunkName: "ui_parameter_image_template" */ 'plugins/slycat-parameter-image/ui.html');
@@ -50,6 +51,9 @@ export async function loadTemplate(name, format) {
       break;
     case "DAC":
       html = await import(/* webpackChunkName: "ui_dial_a_cluster_template" */ 'plugins/slycat-dac/html/dac-ui.html');
+      break;
+    case "data-model":
+      html = await import(/* webpackChunkName: "ui_data_model_template" */ 'plugins/slycat-data-model/ui.html');
       break;
     default:
       console.log("We don't recognize this template type, so not loading a template.");
@@ -74,7 +78,7 @@ export async function loadTemplate(name, format) {
 export async function loadModule(name) {
   // console.log("loadModelModule, page.model_type is " + page.model_type);
   let module;
-
+  console.log(`loadModule name ${name}`);
   switch(name) {
     case "parameter-image":
       module = await import(/* webpackChunkName: "ui_parameter_image_module" */ 'plugins/slycat-parameter-image/js/ui.js');
@@ -96,6 +100,9 @@ export async function loadModule(name) {
       break;
     case "DAC":
       module = await import(/* webpackChunkName: "ui_dial_a_cluster_module" */ 'plugins/slycat-dac/js/dac-ui.js');
+      break;
+    case "data-model":
+      module = await import(/* webpackChunkName: "ui_dial_a_cluster_module" */ 'plugins/slycat-data-model/js/ui.js');
       break;
     default:
       console.log("We don't recognize this module type, so not loading a module.");

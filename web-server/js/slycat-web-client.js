@@ -1078,7 +1078,25 @@ module.post_projects = function(params)
     }
   });
 };
-
+module.post_project_models_fetch = function( pid, modelType, name, description = '', marking = '')
+{
+  return fetch(`${api_root}projects/${pid}/models`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        dataType: "json",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "model-type": modelType,
+          "name": name,
+          "description": description,
+          "marking": marking,
+        })
+      });
+};
 module.post_project_models = function(params)
 {
   $.ajax(

@@ -334,7 +334,6 @@ def register_slycat_plugin(context):
                 # now start thread to prevent timing out on large files
 
             stop_event = threading.Event()
-            # compute(model["_id"], stop_event, calling_client)
             thread = threading.Thread(target=compute, args=(model["_id"], stop_event, calling_client))
             thread.start()
 
