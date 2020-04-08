@@ -1,6 +1,7 @@
 'use strict';
 import * as React from 'react';
 import markings from "js/slycat-markings";
+import client from "js/slycat-web-client";
 import { createModel, CreateModelResponse}from "./wizard-utils.ts";
 /**
  * nut used
@@ -29,28 +30,30 @@ export default class DataWizard extends React.Component<DataWizardProps, DataWiz
       modelId: ''
     }
   }
-  private handleCreateModel = (): void => {
-    createModel(this.props.projectId, 'data-model', '', '', markings.preselected())
-      .then((response: CreateModelResponse) =>{
-      this.setState({modelId: response.id});
-    });
-  };
-  private createModelButton = (mid: string) : JSX.Element => {
-    const createButton = (
-      <React.Fragment>
-        <button className="btn btn-primary" onClick={()=>this.handleCreateModel()}>
-          create model
-        </button>
-      </React.Fragment>
-    );
-    return mid===''?createButton:null;
+
+  componentDidMount() {
+    console.log(`called componentDidMount ${JSON.stringify(this.state)}`);
+    if(this.state.modelId === ''){
+        createModel(this.props.projectId, 'data-model', '', '', markings.preselected())
+        .then((response: CreateModelResponse) =>{
+        this.setState({modelId: response.id});
+      });
+    }
   }
+
+  componentWillUnmount() {
+    console.log("called componentWillUnmount");
+    if(this.state.modelId !== ''){
+      client.delete_model_fetch({ mid: this.state.modelId })
+      .then(()=>this.setState({modelId: ''}));
+    }
+  }
+
   // client.delete_model_fetch({ mid: component.model._id() })
   render() {
     return (
     	<div className="justify-content-center mt-4">
         DataWizard init with PID {this.props.projectId}
-        {this.createModelButton(this.state.modelId)}
       </div>
     );
   }
