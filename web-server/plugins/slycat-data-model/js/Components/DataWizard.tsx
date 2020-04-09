@@ -2,7 +2,8 @@
 import * as React from 'react';
 import markings from "js/slycat-markings";
 import client from "js/slycat-web-client";
-import { createModel, CreateModelResponse}from "./wizard-utils.ts";
+import { createModel, CreateModelResponse} from "./wizard-utils.ts";
+import {WizardModal, WizardModalProps} from "./WizardModal.tsx";
 /**
  * nut used
  */
@@ -40,21 +41,42 @@ export default class DataWizard extends React.Component<DataWizardProps, DataWiz
       });
     }
   }
-
-  componentWillUnmount() {
-    console.log("called componentWillUnmount");
-    if(this.state.modelId !== ''){
-      client.delete_model_fetch({ mid: this.state.modelId })
-      .then(()=>this.setState({modelId: ''}));
+  private getWizardModalHeader = ():JSX.Element => {
+    return (
+      <React.Fragment>
+        header
+      </React.Fragment>
+    )
+  }
+  private getWizardModalBody = ():JSX.Element => {
+    return (
+      <React.Fragment>
+        body
+      </React.Fragment>
+    )
+  }
+  private getModalWizardFooter = ():JSX.Element => {
+    return (
+      <React.Fragment>
+        footer
+      </React.Fragment>
+    )
+  }
+  private getWizardModalProps = (): WizardModalProps => {
+    return {
+      closeModal: ()=> client.delete_model_fetch({ mid: this.state.modelId }),
+      header: this.getWizardModalHeader(),
+      body: this.getWizardModalBody(),
+      footer: this.getModalWizardFooter(),
+      title: 'Data Wizard'
     }
   }
-
-  // client.delete_model_fetch({ mid: component.model._id() })
+  // client.delete_model_fetch({ mid: this.state.modelId })
   render() {
     return (
-    	<div className="justify-content-center mt-4">
-        DataWizard init with PID {this.props.projectId}
-      </div>
+      <WizardModal
+        {...this.getWizardModalProps()}
+      />
     );
   }
 }
