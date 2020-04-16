@@ -5,6 +5,7 @@ import client from "js/slycat-web-client";
 import { createModel, CreateModelResponse} from "./wizard-utils.ts";
 import { WizardModal, WizardModalProps } from "./WizardModal.tsx";
 import { DataWizardNavPills } from "./DataWizardNavPills.tsx";
+import { LocalBrowser } from "./LocalBrowser.tsx";
 /**
  * nut used
  */
@@ -19,6 +20,7 @@ export interface DataWizardState {
   modelId: string
   activeTab: number
   localData: boolean
+  file: File
 }
 /**
  * class that creates a Navbar for use in tracking progress through say a wizard or
@@ -31,7 +33,8 @@ export default class DataWizard extends React.Component<DataWizardProps, DataWiz
     this.state = {
       modelId: '',
       activeTab: 0,
-      localData: true
+      localData: true,
+      file: new File([""], "file_stub")
     }
   }
 
@@ -50,13 +53,45 @@ export default class DataWizard extends React.Component<DataWizardProps, DataWiz
       </React.Fragment>
     )
   }
+  private readFile = (f:any): void => {
+    console.log(f);
+    this.setState({file:f});
+  }
+  private previewFile = (): JSX.Element => {
+    let f = this.state.file;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+      let fileDisplayArea = document.getElementById('fileDisplayArea');
+      fileDisplayArea&&(fileDisplayArea.innerText = reader.result as any);
+    }
+    reader.readAsText(f);
+    return (
+      <React.Fragment>
+        {f&&(<li>
+          <strong>{f.name}</strong> 
+          {`${f.type} - ${f.size} bytes`}
+        </li>)}
+        <div className="card col-3" style={{maxHeight: `200px`}}>
+          <div className="card-header">Header</div>
+          <div className="card-body overflow-auto vh-100">
+            <pre id="fileDisplayArea"></pre>
+          </div> 
+          <div className="card-footer">Footer</div>
+        </div>
+      </React.Fragment>
+    );
+  }
   private getWizardModalBody = ():JSX.Element => {
     return (
       <React.Fragment>
         <DataWizardNavPills
           activeTab={this.state.activeTab}
         />
-        <div className="tab-content">
+        <LocalBrowser
+          readFile={(e:any)=>this.readFile(e.target.files[0])} 
+        />
+        {this.previewFile()}
+        {/* <div className="tab-content">
           <div className="form-check">
             <label className="font-weight-bold">
               <input type="radio" name="local-or-remote-radios" id="local-radio" value="local"/>
@@ -69,7 +104,7 @@ export default class DataWizard extends React.Component<DataWizardProps, DataWiz
               Remote
             </label>
           </div>
-        </div>
+        </div> */}
           {/* <slycat-parser-controls params="parser:parser,category:'table'" data-bind="visible: ps_type() == 'server'"></slycat-parser-controls> */}
       </React.Fragment>
     )
