@@ -4,7 +4,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 //TODO: brought warning in just to show react can render remove later
-import Warning from "components/Warning.tsx"
+import TimeseriesWizard from "components/timeseries-wizard/TimeSeriesWizard.tsx"
 import server_root from "js/slycat-server-root";
 import client from "js/slycat-web-client";
 import * as dialog from "js/slycat-dialog";
@@ -18,14 +18,10 @@ import "js/slycat-model-controls";
 import timeseriesWizardUI from "../wizard-ui.html";
 
 function constructor(params) {
-  let slycat_content = document.querySelector(".react-wizard");
-  
   // this is where we render react into the timeseries modal
   ReactDOM.render(
-    <Warning //TODO: instead of warning we need to create a new react timesersies wizard and initialize it here
-      warningMessage={"react is working!"}
-    />,
-    slycat_content
+    <TimeseriesWizard/>,
+    document.querySelector(".react-wizard")
   );
   // everything after this is basically skipped
 
