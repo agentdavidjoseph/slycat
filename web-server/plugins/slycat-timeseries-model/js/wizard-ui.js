@@ -1,7 +1,10 @@
 /* Copyright (c) 2013, 2018 National Technology and Engineering Solutions of Sandia, LLC . Under the terms of Contract
  DE-NA0003525 with National Technology and Engineering Solutions of Sandia, LLC, the U.S. Government
  retains certain rights in this software. */
-
+import React from "react";
+import ReactDOM from "react-dom";
+//TODO: brought warning in just to show react can render remove later
+import Warning from "components/Warning.tsx"
 import server_root from "js/slycat-server-root";
 import client from "js/slycat-web-client";
 import * as dialog from "js/slycat-dialog";
@@ -15,6 +18,17 @@ import "js/slycat-model-controls";
 import timeseriesWizardUI from "../wizard-ui.html";
 
 function constructor(params) {
+  let slycat_content = document.querySelector(".react-wizard");
+  
+  // this is where we render react into the timeseries modal
+  ReactDOM.render(
+    <Warning //TODO: instead of warning we need to create a new react timesersies wizard and initialize it here
+      warningMessage={"react is working!"}
+    />,
+    slycat_content
+  );
+  // everything after this is basically skipped
+
   var component = {};
   component.tab = ko.observable(0);
   component.project = params.projects()[0];
@@ -515,8 +529,8 @@ function constructor(params) {
 
     component.tab(target);
   };
-
-  return component;
+  // return an empty component since we are just using it to render react
+  return {};
 }
 
 export default {
