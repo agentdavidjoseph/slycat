@@ -9,7 +9,7 @@ import 'plugins/slycat-model-wizards/slycat-model-wizards';
 // Project wizards
 import 'plugins/slycat-project-wizards/slycat-project-wizards';
 
-// Models
+// Model wizards
 import 'plugins/slycat-parameter-image/slycat-parameter-image';
 import 'plugins/slycat-timeseries-model/slycat-timeseries-model';
 import 'plugins/slycat-cca/slycat-cca';
