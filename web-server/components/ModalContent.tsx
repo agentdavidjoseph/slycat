@@ -1,7 +1,6 @@
 import * as React from "react";
 
 /**
- * @member modalId string dom id for the modal
  * @member closingCallBack callback function for cleanup when closing the modal
  * @member title test for the top of the modal
  */
@@ -17,9 +16,6 @@ export interface ModalContentProps {
  */
 export interface ModalContentState {}
 
-/**
- * takes a list of messages to be displayed as a warning
- */
 export default class ModalContent extends React.Component<
   ModalContentProps,
   ModalContentState
@@ -31,7 +27,6 @@ export default class ModalContent extends React.Component<
 
   /**
    *close the modal and call the cleanup function
-   *
    * @memberof ModalContent
    */
   closeModal = (e: React.MouseEvent): void => {

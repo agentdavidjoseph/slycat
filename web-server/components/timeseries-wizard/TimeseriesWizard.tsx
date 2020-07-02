@@ -13,7 +13,7 @@ export interface TimeseriesWizardProps {}
 export interface TimeseriesWizardState {}
 
 /**
- * takes a list of messages to be displayed as a warning
+ * modal wizard for the timeseries model creation
  */
 export default class TimeseriesWizard extends React.Component<
   TimeseriesWizardProps,
