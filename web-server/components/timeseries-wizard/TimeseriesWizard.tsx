@@ -22,7 +22,7 @@ export default class TimeseriesWizard extends React.Component<
   public constructor(props: TimeseriesWizardProps) {
     super(props);
     this.state = {
-      username: localStorage.getItem("slycat-timeseries-wizard") as any,
+      TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
     };
   }
 
@@ -40,7 +40,7 @@ export default class TimeseriesWizard extends React.Component<
           closingCallBack={() => {
             console.log("called closing callback");
           }}
-          title={"Timeseries"}
+          title={"Timeseries Wizard"}
           body={this.getBodyJsx()}
           footer={this.getFooterJSX()}
         />
