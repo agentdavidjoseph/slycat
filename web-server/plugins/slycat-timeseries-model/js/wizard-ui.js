@@ -18,9 +18,10 @@ import "js/slycat-model-controls";
 import timeseriesWizardUI from "../wizard-ui.html";
 
 function constructor(params) {
+
   // this is where we render react into the timeseries modal
   ReactDOM.render(
-    <TimeseriesWizard/>,
+    <TimeseriesWizard project={params.projects()[0]}/>,
     document.querySelector(".react-wizard")
   );
   // everything after this is basically skipped
@@ -148,7 +149,7 @@ function constructor(params) {
   };
 
   // Create a model as soon as the dialog loads. We rename, change description and marking later
-  component.create_model();
+  // component.create_model();
 
   component.cancel = function() {
     if (component.model._id())

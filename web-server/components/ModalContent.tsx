@@ -5,6 +5,7 @@ import * as React from "react";
  * @member title test for the top of the modal
  */
 export interface ModalContentProps {
+  modalId: string,
   closingCallBack: Function;
   title: string;
   body: JSX.Element;
@@ -31,7 +32,7 @@ export default class ModalContent extends React.Component<
    */
   closeModal = (e: React.MouseEvent): void => {
     this.props.closingCallBack();
-    // ($("#" + this.props.modalId) as any).modal("hide");
+    ($("#" + this.props.modalId) as any).modal("hide");
   };
 
   render() {

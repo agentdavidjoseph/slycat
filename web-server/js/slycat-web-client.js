@@ -1087,6 +1087,36 @@ module.post_projects = function(params)
   });
 };
 
+module.post_project_models_fetch = function(params)
+{
+  return fetch(`${api_root}projects/${params.pid}/models`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        dataType: "json",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(
+          {
+            "model-type": params.type,
+            "name": params.name,
+            "description": params.description || "",
+            "marking": params.marking || "",
+          })
+      })
+  .then(function(response) {
+    if (!response.ok) {
+        throw {
+          status:response.status, 
+          statusText: response.statusText
+        };
+    }
+    return response.json();
+  });
+};
+
 module.post_project_models = function(params)
 {
   $.ajax(
