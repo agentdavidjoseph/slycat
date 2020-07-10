@@ -1,6 +1,7 @@
 import * as React from "react";
 import ModalContent from "components/ModalContent.tsx";
 import client from "js/slycat-web-client";
+import SlycatFormRadioCheckbox from 'components/SlycatFormRadioCheckbox.tsx';
 
 // import client from "../../js/slycat-web-client";
 
@@ -30,6 +31,8 @@ export default class TimeseriesWizard extends React.Component<
       project: this.props.project,
       model: {_id: ''},
       modalId: "slycat-wizard",
+      visibleTab: '0',
+      selectedOption: 'xyce',
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
     };
     initialState = _.cloneDeep(this.state);
@@ -37,12 +40,66 @@ export default class TimeseriesWizard extends React.Component<
   }
 
   getBodyJsx(): JSX.Element {
-    return <div>body</div>;
+
+    return (
+      <div>
+        <ul className="nav nav-pills">
+        <li className={this.state.visibleTab == '0' ? 'nav-item active': 'nav-item'}><a className="nav-link">Find Data</a></li>
+        <li className={this.state.visibleTab == '1' ? 'nav-item active': 'nav-item'}><a className="nav-link">Select Table File</a></li>
+        <li className="nav-item"><a className="nav-link">Timeseries Parameters</a></li>
+        <li className="nav-item"><a className="nav-link">Select Timeseries File</a></li>
+        <li className="nav-item"><a className="nav-link">Select HDF5 Directory</a></li>
+        <li className="nav-item"><a className="nav-link">HPC Parameters</a></li>
+        <li className="nav-item"><a className="nav-link">Name Model</a></li>
+      </ul>
+        {this.state.visibleTab === "0" ?
+          <form className='ml-3'>
+            <SlycatFormRadioCheckbox
+              checked={this.state.selectedOption === 'xyce'}
+              onChange={this.sourceSelect}
+              value={'xyce'}
+              text={'Xyce'}
+            />
+            <SlycatFormRadioCheckbox
+              checked={this.state.selectedOption === 'csv'}
+              onChange={this.sourceSelect}
+              value={'csv'}
+              text={'CSV'}
+            />
+            <SlycatFormRadioCheckbox
+              checked={this.state.selectedOption === 'hdf5'}
+              onChange={this.sourceSelect}
+              value={'hdf5'}
+              text={'HDF5'}
+            />
+          </form>
+        :null}
+      </div>
+    );
   }
 
   getFooterJSX(): JSX.Element {
-    return <div>footer</div>;
+    let footerJSX = [];
+    if(this.state.visibleTab == '0') {
+      footerJSX.push(<button key={4} type='button' className='btn btn-primary' onClick={this.continue}>
+      Continue
+      </button>)
+    }
+    return footerJSX;
   }
+
+  continue = () =>
+  {
+    if (this.state.visibleTab === "0")
+    {
+      this.setState({visibleTab: "1"});
+    }
+  };
+
+  sourceSelect = (value) =>
+  {
+    this.setState({selectedOption: value});
+  };
 
   cleanup = () => {
     this.setState(initialState);
