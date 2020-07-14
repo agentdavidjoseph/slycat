@@ -2,6 +2,9 @@ import * as React from "react";
 import ModalContent from "components/ModalContent.tsx";
 import client from "js/slycat-web-client";
 import SlycatFormRadioCheckbox from 'components/SlycatFormRadioCheckbox.tsx';
+import SlycatRemoteControls from 'components/SlycatRemoteControls.jsx';
+import ConnectButton from 'components/ConnectButton.tsx';
+import RemoteFileBrowser from 'components/RemoteFileBrowser.tsx'
 
 // import client from "../../js/slycat-web-client";
 
@@ -33,6 +36,11 @@ export default class TimeseriesWizard extends React.Component<
       modalId: "slycat-wizard",
       visibleTab: '0',
       selectedOption: 'xyce',
+      loadingData: false,
+      hostname: '',
+      sessionExists: false,
+      username: '',
+      password: '',
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
     };
     initialState = _.cloneDeep(this.state);
@@ -40,7 +48,6 @@ export default class TimeseriesWizard extends React.Component<
   }
 
   getBodyJsx(): JSX.Element {
-
     return (
       <div>
         <ul className="nav nav-pills">
@@ -53,38 +60,73 @@ export default class TimeseriesWizard extends React.Component<
         <li className="nav-item"><a className="nav-link">Name Model</a></li>
       </ul>
         {this.state.visibleTab === "0" ?
-          <form className='ml-3'>
-            <SlycatFormRadioCheckbox
-              checked={this.state.selectedOption === 'xyce'}
-              onChange={this.sourceSelect}
-              value={'xyce'}
-              text={'Xyce'}
+          <div>
+            <form className='ml-3'>
+              <SlycatFormRadioCheckbox
+                checked={this.state.selectedOption === 'xyce'}
+                onChange={this.sourceSelect}
+                value={'xyce'}
+                text={'Xyce'}
+              />
+              <SlycatFormRadioCheckbox
+                checked={this.state.selectedOption === 'csv'}
+                onChange={this.sourceSelect}
+                value={'csv'}
+                text={'CSV'}
+              />
+              <SlycatFormRadioCheckbox
+                checked={this.state.selectedOption === 'hdf5'}
+                onChange={this.sourceSelect}
+                value={'hdf5'}
+                text={'HDF5'}
+              />
+            </form>
+            <SlycatRemoteControls
+            loadingData={this.state.loadingData} 
+            callBack={this.controlsCallBack}
+            showConnectButton={false}
             />
-            <SlycatFormRadioCheckbox
-              checked={this.state.selectedOption === 'csv'}
-              onChange={this.sourceSelect}
-              value={'csv'}
-              text={'CSV'}
+          </div>
+        : null}
+        {this.state.visibleTab === "1" ?
+          <div>
+            <RemoteFileBrowser 
+              onSelectFileCallBack={this.onSelectFile}
+              onSelectParserCallBack={this.onSelectParser}
+              onReauthCallBack={this.onReauth}
+              hostname={this.state.hostname} 
             />
-            <SlycatFormRadioCheckbox
-              checked={this.state.selectedOption === 'hdf5'}
-              onChange={this.sourceSelect}
-              value={'hdf5'}
-              text={'HDF5'}
-            />
-          </form>
-        :null}
+          </div>
+        : null}
       </div>
     );
   }
 
   getFooterJSX(): JSX.Element {
     let footerJSX = [];
-    if(this.state.visibleTab == '0') {
-      footerJSX.push(<button key={4} type='button' className='btn btn-primary' onClick={this.continue}>
-      Continue
-      </button>)
+    if(this.state.visibleTab != "0"){
+      footerJSX.push(
+      <button key={1} type='button' className='btn btn-light mr-auto' onClick={this.back}>
+        Back
+      </button>
+      );
     }
+    if(this.state.visibleTab == '0') {
+      // footerJSX.push(<button key={4} type='button' className='btn btn-primary' onClick={this.continue}>
+      // Continue
+      // </button>)
+      footerJSX.push(
+      <ConnectButton
+        key={3}
+        text='Continue'
+        loadingData={this.state.loadingData}
+        hostname = {this.state.hostname}
+        username = {this.state.username}
+        password = {this.state.password}
+        callBack = {this.connectButtonCallBack}
+      />);
+    }
+    // return <div>footer</div>;
     return footerJSX;
   }
 
@@ -94,6 +136,45 @@ export default class TimeseriesWizard extends React.Component<
     {
       this.setState({visibleTab: "1"});
     }
+  };
+
+  back = () => {
+    if (this.state.visibleTab === "1") {
+      this.setState({visibleTab: "0"});
+    }
+    else if (this.state.visibleTab === "2") {
+      this.setState({visibleTab: "0"});
+    }
+    else if (this.state.visibleTab === "3")
+    {
+      this.setState({visibleTab: "2"});
+    }
+  }
+
+  connectButtonCallBack = (sessionExists, loadingData) => {
+    this.setState({
+      sessionExists,
+      loadingData,
+      reauth: false,
+    },()=>{
+      if(this.state.sessionExists){
+        this.continue();
+      }
+    });
+  }
+
+  controlsCallBack = (newHostname, newUsername, newPassword, sessionExists) => {
+    // console.log("Remote controls callback.");
+    // console.log("Hostname: " + newHostname);
+    // console.log("Username: " + newUsername);
+    // console.log("Password: " + newPassword);
+    // console.log("Sessions Exists? " + sessionExists);
+    this.setState({
+      hostname: newHostname,
+      sessionExists: sessionExists,
+      username: newUsername,
+      password: newPassword
+    });
   };
 
   sourceSelect = (value) =>
@@ -117,7 +198,6 @@ export default class TimeseriesWizard extends React.Component<
       this.setState({model: result});
     })
   };
-
 
   render() {
     return (
