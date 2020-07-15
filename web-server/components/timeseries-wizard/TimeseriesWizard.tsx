@@ -38,7 +38,7 @@ export default class TimeseriesWizard extends React.Component<
       selectedOption: 'xyce',
       loadingData: false,
       hostname: '',
-      sessionExists: false,
+      sessionExists: null,
       username: '',
       password: '',
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
@@ -111,7 +111,7 @@ export default class TimeseriesWizard extends React.Component<
       </button>
       );
     }
-    if(this.state.visibleTab == '0') {
+    if(this.state.visibleTab == '0' && this.state.sessionExists != true) {
       // footerJSX.push(<button key={4} type='button' className='btn btn-primary' onClick={this.continue}>
       // Continue
       // </button>)
@@ -125,6 +125,13 @@ export default class TimeseriesWizard extends React.Component<
         password = {this.state.password}
         callBack = {this.connectButtonCallBack}
       />);
+    }
+    else {
+      footerJSX.push( 
+        <button key={4} type='button' className='btn btn-primary' onClick={this.continue}>
+        Continue
+        </button>
+      )
     }
     // return <div>footer</div>;
     return footerJSX;
@@ -164,11 +171,6 @@ export default class TimeseriesWizard extends React.Component<
   }
 
   controlsCallBack = (newHostname, newUsername, newPassword, sessionExists) => {
-    // console.log("Remote controls callback.");
-    // console.log("Hostname: " + newHostname);
-    // console.log("Username: " + newUsername);
-    // console.log("Password: " + newPassword);
-    // console.log("Sessions Exists? " + sessionExists);
     this.setState({
       hostname: newHostname,
       sessionExists: sessionExists,
@@ -176,6 +178,16 @@ export default class TimeseriesWizard extends React.Component<
       password: newPassword
     });
   };
+
+  onReauth = () => {
+    // Session has been lost, so update state to reflect this.
+    this.setState({
+      sessionExists: false,
+      reauth: true,
+    });
+    // Switch to login controls
+    this.setState({visible_tab: "2", selectedNameIndex: 1});
+  }
 
   sourceSelect = (value) =>
   {
