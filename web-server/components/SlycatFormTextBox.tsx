@@ -32,7 +32,7 @@ export default class SlycatFormTextBox extends React.Component<SlycatFormTextBox
 
   onValueChange = (value) => {
     // localStorage.setItem("slycat-remote-controls-username", value);
-    this.setState({username: value});
+    this.setState({value: value});
   };
 
   public render () {
