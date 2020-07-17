@@ -2,6 +2,8 @@ import * as React from "react";
 import ModalContent from "components/ModalContent.tsx";
 import client from "js/slycat-web-client";
 import SlycatFormRadioCheckbox from 'components/SlycatFormRadioCheckbox.tsx';
+import SlycatFormTextBox from 'components/SlycatFormTextBox.tsx';
+import SlycatFormDropDown from 'components/SlycatFormDropDown.tsx';
 import SlycatRemoteControls from 'components/SlycatRemoteControls.jsx';
 import ConnectButton from 'components/ConnectButton.tsx';
 import RemoteFileBrowser from 'components/RemoteFileBrowser.tsx'
@@ -41,6 +43,9 @@ export default class TimeseriesWizard extends React.Component<
       sessionExists: null,
       username: '',
       password: '',
+      file: [new File([""], "filename")],
+      selectedPath: '',
+      parserType: '',
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
     };
     initialState = _.cloneDeep(this.state);
@@ -53,7 +58,7 @@ export default class TimeseriesWizard extends React.Component<
         <ul className="nav nav-pills">
         <li className={this.state.visibleTab == '0' ? 'nav-item active': 'nav-item'}><a className="nav-link">Find Data</a></li>
         <li className={this.state.visibleTab == '1' ? 'nav-item active': 'nav-item'}><a className="nav-link">Select Table File</a></li>
-        <li className="nav-item"><a className="nav-link">Timeseries Parameters</a></li>
+        <li className={this.state.visibleTab == '2' ? 'nav-item active': 'nav-item'}><a className="nav-link">Timeseries Parameters</a></li>
         <li className="nav-item"><a className="nav-link">Select Timeseries File</a></li>
         <li className="nav-item"><a className="nav-link">Select HDF5 Directory</a></li>
         <li className="nav-item"><a className="nav-link">HPC Parameters</a></li>
@@ -98,6 +103,29 @@ export default class TimeseriesWizard extends React.Component<
             />
           </div>
         : null}
+        {this.state.visibleTab === "2" && this.state.selectedOption === 'csv' ?
+          <div>
+            <SlycatFormTextBox
+              label={"Table File Delimeter"}
+            />
+            <SlycatFormDropDown
+              label={"Timeseries Column Name"}
+            />
+          </div>
+        : null}
+        {this.state.visibleTab === "2" ?
+          <div>
+            <SlycatFormTextBox
+              label={'Timeseries Bin Count'}
+            />
+            <SlycatFormDropDown
+              label={'Resampling Algorithm'}
+            />
+            <SlycatFormDropDown
+              label={'Cluster Linkage Measure'}
+            />
+          </div>
+        : null}
       </div>
     );
   }
@@ -139,9 +167,11 @@ export default class TimeseriesWizard extends React.Component<
 
   continue = () =>
   {
-    if (this.state.visibleTab === "0")
-    {
+    if (this.state.visibleTab === "0") {
       this.setState({visibleTab: "1"});
+    }
+    else if (this.state.visibleTab === "1") {
+      this.setState({visibleTab: "2"});
     }
   };
 
@@ -150,7 +180,7 @@ export default class TimeseriesWizard extends React.Component<
       this.setState({visibleTab: "0"});
     }
     else if (this.state.visibleTab === "2") {
-      this.setState({visibleTab: "0"});
+      this.setState({visibleTab: "1"});
     }
     else if (this.state.visibleTab === "3")
     {
@@ -187,6 +217,41 @@ export default class TimeseriesWizard extends React.Component<
     });
     // Switch to login controls
     this.setState({visible_tab: "2", selectedNameIndex: 1});
+  }
+
+  onSelectFile = (selectedPath, selectedPathType, file) => {
+    // type is either 'd' for directory or 'f' for file
+
+    if(selectedPathType === 'f') {
+      this.setState({files:file, disabled:false, selected_path:selectedPath});
+    }
+    else {
+      this.setState({disabled:true});
+    }
+    if(this.state.selectedOption === 'csv') {
+      client.get_time_series_names({
+        hostname: this.state.hostname,
+        path: selectedPath,
+        success: function(response) {
+          console.log(response);
+          // component.remote.progress_status("Finished");
+          // component.remote.progress(100);
+          // component.timeseries_names(JSON.parse(response))
+          // component.tab(4);
+        },
+        error: function(request, status, reason_phrase) {
+          console.log(status);
+          // console.log(reason_phrase);
+          // component.remote.progress_status("");
+          // component.remote.progress(null);
+          // dialog.dialog({message: "Please select a CSV file with a valid timeseries column."})();
+        }
+      });
+    }
+  }
+  
+  onSelectParser = (type) => {
+    this.setState({parserType:type});
   }
 
   sourceSelect = (value) =>
