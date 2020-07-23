@@ -2,11 +2,13 @@ import * as React from "react";
 import ModalContent from "components/ModalContent.tsx";
 import client from "js/slycat-web-client";
 import SlycatFormRadioCheckbox from 'components/SlycatFormRadioCheckbox.tsx';
-import SlycatFormTextBox from 'components/SlycatFormTextBox.tsx';
+import SlycatNumberInput from 'components/SlycatNumberInput.tsx';
+import SlycatTextInput from 'components/SlycatTextInput.tsx';
 import SlycatFormDropDown from 'components/SlycatFormDropDown.tsx';
 import SlycatRemoteControls from 'components/SlycatRemoteControls.jsx';
 import ConnectButton from 'components/ConnectButton.tsx';
 import RemoteFileBrowser from 'components/RemoteFileBrowser.tsx'
+import SlycatSelector from 'components/SlycatSelector.tsx';
 
 // import client from "../../js/slycat-web-client";
 
@@ -46,7 +48,7 @@ export default class TimeseriesWizard extends React.Component<
       file: [new File([""], "filename")],
       selectedPath: '',
       parserType: '',
-      columnNames: [],
+      columnNames: null,
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
     };
     initialState = _.cloneDeep(this.state);
@@ -106,24 +108,34 @@ export default class TimeseriesWizard extends React.Component<
         : null}
         {this.state.visibleTab === "2" && this.state.selectedOption === 'csv' ?
           <div>
-            <SlycatFormTextBox
+            <SlycatTextInput
               label={"Table File Delimeter"}
+              value={','}
             />
-            <SlycatFormDropDown
-              label={"Timeseries Column Name"}
+            <SlycatSelector
+              onSelectCallBack={this.props.onSelectParserCallBack}
+              label={'Timeseries Column Name'}
+              options={this.state.columnNames}
             />
           </div>
         : null}
         {this.state.visibleTab === "2" ?
           <div>
-            <SlycatFormTextBox
+            <SlycatNumberInput
               label={'Timeseries Bin Count'}
+              value={500}
             />
-            <SlycatFormDropDown
+            <SlycatSelector
               label={'Resampling Algorithm'}
+              options={[{'text':'uniform piecewise aggregate approximation', 'value':'uniform-paa'}, 
+              {'text':'uniform piecewise linear approximation', 'value':'uniform-pla'}]}
             />
-            <SlycatFormDropDown
+            <SlycatSelector
               label={'Cluster Linkage Measure'}
+              options={[{'text':'average: Unweighted Pair Group Method with Arithmetic Mean (UPGMA) Algorithm', 'value':'average'},
+              {'text':'single: Nearest Point Algorithm', 'value':'single'},
+              {'text':'complete: Farthest Point Algorithm', 'value':'complete'},
+              {'text':'weighted: Weighted Pair Group Method with Arithmetic Mean (WPGMA) Algorithm','value':'weighted'}]}
             />
           </div>
         : null}
@@ -234,11 +246,20 @@ export default class TimeseriesWizard extends React.Component<
         hostname: this.state.hostname,
         path: selectedPath,
       }).then((result) => {
-        this.setState({columnNames:result});
+        this.handleColumnNames(result);
+        // this.setState({columnNames:result});
       })
     }
   }
   
+  handleColumnNames = (names) => {
+    const columnNames = [];
+    for(let i = 0; i < names.length; i++) {
+      columnNames.push({text:names[i], value:names[i]});
+    }
+    this.setState({columnNames:columnNames});
+  }
+
   onSelectParser = (type) => {
     this.setState({parserType:type});
   }
