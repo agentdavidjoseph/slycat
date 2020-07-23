@@ -1792,6 +1792,17 @@ module.job_time = function(params)
   });
 };
 
+module.get_time_series_names_fetch = function(params)
+{
+  return fetch(`${api_root}remotes/${params.hostname}/time_series_names/file/${params.path}`, {credentials: "same-origin", cache: "no-store", dataType: "json"})
+  .then(function(response) {
+    if (!response.ok) {
+        throw `bad response with: ${response.status} :: ${response.statusText}`;
+    }
+    return response.json();
+  });
+};
+
 module.get_time_series_names = function(params)
 {
   $.ajax({

@@ -46,6 +46,7 @@ export default class TimeseriesWizard extends React.Component<
       file: [new File([""], "filename")],
       selectedPath: '',
       parserType: '',
+      columnNames: [],
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
     };
     initialState = _.cloneDeep(this.state);
@@ -229,24 +230,12 @@ export default class TimeseriesWizard extends React.Component<
       this.setState({disabled:true});
     }
     if(this.state.selectedOption === 'csv') {
-      client.get_time_series_names({
+      client.get_time_series_names_fetch({
         hostname: this.state.hostname,
         path: selectedPath,
-        success: function(response) {
-          console.log(response);
-          // component.remote.progress_status("Finished");
-          // component.remote.progress(100);
-          // component.timeseries_names(JSON.parse(response))
-          // component.tab(4);
-        },
-        error: function(request, status, reason_phrase) {
-          console.log(status);
-          // console.log(reason_phrase);
-          // component.remote.progress_status("");
-          // component.remote.progress(null);
-          // dialog.dialog({message: "Please select a CSV file with a valid timeseries column."})();
-        }
-      });
+      }).then((result) => {
+        this.setState({columnNames:result});
+      })
     }
   }
   
