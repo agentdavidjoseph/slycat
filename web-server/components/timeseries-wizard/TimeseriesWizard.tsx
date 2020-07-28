@@ -59,20 +59,20 @@ export default class TimeseriesWizard extends React.Component<
     return (
       <div>
         <ul className="nav nav-pills">
-        <li className={this.state.visibleTab == '0' ? 'nav-item active': 'nav-item'}><a className="nav-link">Find Data</a></li>
-        {this.state.selectedOption != 'hdf5' ?
-        <li className={this.state.visibleTab == '1' ? 'nav-item active': 'nav-item'}><a className="nav-link">Select Table File</a></li>
-        : null}
-        <li className={this.state.visibleTab == '2' ? 'nav-item active': 'nav-item'}><a className="nav-link">Timeseries Parameters</a></li>
-        {this.state.selectedOption == 'xyce' ? 
-        <li className="nav-item"><a className="nav-link">Select Timeseries File</a></li>
-        : null}
-        {this.state.selectedOption == 'hdf5' ? 
-        <li className="nav-item"><a className="nav-link">Select HDF5 Directory</a></li>
-        : null}
-        <li className="nav-item"><a className="nav-link">HPC Parameters</a></li>
-        <li className="nav-item"><a className="nav-link">Name Model</a></li>
-      </ul>
+          <li className={this.state.visibleTab == '0' ? 'nav-item active': 'nav-item'}><a className="nav-link">Find Data</a></li>
+          {this.state.selectedOption != 'hdf5' ?
+          <li className={this.state.visibleTab == '1' ? 'nav-item active': 'nav-item'}><a className="nav-link">Select Table File</a></li>
+          : null}
+          <li className={this.state.visibleTab == '2' ? 'nav-item active': 'nav-item'}><a className="nav-link">Timeseries Parameters</a></li>
+          {this.state.selectedOption == 'xyce' ? 
+          <li className={this.state.visibleTab == '3' ? 'nav-item active': 'nav-item'}><a className="nav-link">Select Timeseries File</a></li>
+          : null}
+          {this.state.selectedOption == 'hdf5' ? 
+          <li className={this.state.visibleTab == '4' ? 'nav-item active': 'nav-item'}><a className="nav-link">Select HDF5 Directory</a></li>
+          : null}
+          <li className={this.state.visibleTab == '5' ? 'nav-item active': 'nav-item'}><a className="nav-link">HPC Parameters</a></li>
+          <li className={this.state.visibleTab == '6' ? 'nav-item active': 'nav-item'}><a className="nav-link">Name Model</a></li>
+        </ul>
         {this.state.visibleTab === "0" ?
           <div>
             <form className='ml-3'>
@@ -186,11 +186,32 @@ export default class TimeseriesWizard extends React.Component<
 
   continue = () =>
   {
-    if (this.state.visibleTab === "0") {
-      this.setState({visibleTab: "1"});
+    if (this.state.visibleTab === '0' && this.state.selectedOption != 'hdf5') {
+      this.setState({visibleTab: '1'});
     }
-    else if (this.state.visibleTab === "1") {
-      this.setState({visibleTab: "2"});
+    else if (this.state.visibleTab === '0' && this.state.selectedOption == 'hdf5') {
+      this.setState({visibleTab: '2'});
+    }
+    else if (this.state.visibleTab === '1') {
+      this.setState({visibleTab: '2'});
+    }
+    else if (this.state.visibleTab === '2' && this.state.selectedOption == 'xyce') {
+      this.setState({visibleTab: '3'});
+    }
+    else if (this.state.visibleTab === '2' && this.state.selectedOption == 'csv') {
+      this.setState({visibleTab: '5'});
+    }
+    else if (this.state.visibleTab === '2' && this.state.selectedOption == 'hdf5') {
+      this.setState({visibleTab: '4'});
+    }
+    else if (this.state.visibleTab === '3') {
+      this.setState({visibleTab: '5'});
+    }
+    else if (this.state.visibleTab === '4') {
+      this.setState({visibleTab: '5'});
+    }
+    else if (this.state.visibleTab === '5') {
+      this.setState({visibleTab: '6'});
     }
   };
 
