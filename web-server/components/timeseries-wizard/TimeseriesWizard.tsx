@@ -280,15 +280,32 @@ export default class TimeseriesWizard extends React.Component<
   };
 
   back = () => {
-    if (this.state.visibleTab === "1") {
-      this.setState({visibleTab: "0"});
+    if (this.state.visibleTab === '1') {
+      this.setState({visibleTab: '0'});
     }
-    else if (this.state.visibleTab === "2") {
-      this.setState({visibleTab: "1"});
+    else if (this.state.visibleTab === '2' && this.state.selectedOption != 'hdf5') {
+      this.setState({visibleTab: '1'});
     }
-    else if (this.state.visibleTab === "3")
-    {
-      this.setState({visibleTab: "2"});
+    else if (this.state.visibleTab === '2' && this.state.selectedOption == 'hdf5') {
+      this.setState({visibleTab: '0'});
+    }
+    else if (this.state.visibleTab === '3') {
+      this.setState({visibleTab: '2'});
+    }
+    else if (this.state.visibleTab === '4') {
+      this.setState({visibleTab: '2'});
+    }
+    else if (this.state.visibleTab === '5' && this.state.selectedOption == 'xyce') {
+      this.setState({visibleTab: '3'});
+    }
+    else if (this.state.visibleTab === '5' && this.state.selectedOption == 'csv') {
+      this.setState({visibleTab: '2'});
+    }
+    else if (this.state.visibleTab === '5' && this.state.selectedOption == 'hdf5') {
+      this.setState({visibleTab: '4'});
+    }
+    else if (this.state.visibleTab === '6') {
+      this.setState({visibleTab: '5'});
     }
   }
 
