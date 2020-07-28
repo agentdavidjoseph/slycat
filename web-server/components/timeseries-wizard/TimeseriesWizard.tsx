@@ -47,6 +47,7 @@ export default class TimeseriesWizard extends React.Component<
       password: '',
       tableFile: [new File([""], "filename")],
       timeseriesFile: [new File([""], "filename")],
+      hdf5Directory: '',
       selectedPath: '',
       parserType: '',
       columnNames: null,
@@ -150,6 +151,16 @@ export default class TimeseriesWizard extends React.Component<
           <div>
             <RemoteFileBrowser 
             onSelectFileCallBack={this.onSelectTimeseriesFile}
+            onSelectParserCallBack={this.onSelectParser}
+            onReauthCallBack={this.onReauth}
+            hostname={this.state.hostname} 
+            />
+          </div>
+        : null}
+        {this.state.visibleTab === "4" ? 
+          <div>
+            <RemoteFileBrowser 
+            onSelectFileCallBack={this.onSelectHDF5Directory}
             onSelectParserCallBack={this.onSelectParser}
             onReauthCallBack={this.onReauth}
             hostname={this.state.hostname} 
@@ -295,6 +306,15 @@ export default class TimeseriesWizard extends React.Component<
 
     if(selectedPathType === 'f') {
       this.setState({timeseriesFile:file, disabled:false, selected_path:selectedPath});
+    }
+    else {
+      this.setState({disabled:true});
+    }
+  }
+
+  onSelectHDF5Directory = (selectedPath, selectedPathType, file) => {
+    if(selectedPathType === 'd') {
+      this.setState({hdf5Directory:selectedPath, disabled:false, selected_path:selectedPath});
     }
     else {
       this.setState({disabled:true});
