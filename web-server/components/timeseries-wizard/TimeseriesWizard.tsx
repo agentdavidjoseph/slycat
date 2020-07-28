@@ -45,7 +45,8 @@ export default class TimeseriesWizard extends React.Component<
       sessionExists: null,
       username: '',
       password: '',
-      file: [new File([""], "filename")],
+      tableFile: [new File([""], "filename")],
+      timeseriesFile: [new File([""], "filename")],
       selectedPath: '',
       parserType: '',
       columnNames: null,
@@ -105,7 +106,7 @@ export default class TimeseriesWizard extends React.Component<
         {this.state.visibleTab === "1" ?
           <div>
             <RemoteFileBrowser 
-              onSelectFileCallBack={this.onSelectFile}
+              onSelectFileCallBack={this.onSelectTableFile}
               onSelectParserCallBack={this.onSelectParser}
               onReauthCallBack={this.onReauth}
               hostname={this.state.hostname} 
@@ -259,11 +260,11 @@ export default class TimeseriesWizard extends React.Component<
     this.setState({visible_tab: "2", selectedNameIndex: 1});
   }
 
-  onSelectFile = (selectedPath, selectedPathType, file) => {
+  onSelectTableFile = (selectedPath, selectedPathType, file) => {
     // type is either 'd' for directory or 'f' for file
 
     if(selectedPathType === 'f') {
-      this.setState({files:file, disabled:false, selected_path:selectedPath});
+      this.setState({tableFile:file, disabled:false, selected_path:selectedPath});
     }
     else {
       this.setState({disabled:true});
@@ -276,6 +277,17 @@ export default class TimeseriesWizard extends React.Component<
         this.handleColumnNames(result);
         // this.setState({columnNames:result});
       })
+    }
+  }
+
+  onSelectTimeseriesFile = (selectedPath, selectedPathType, file) => {
+    // type is either 'd' for directory or 'f' for file
+
+    if(selectedPathType === 'f') {
+      this.setState({timeseriesFile:file, disabled:false, selected_path:selectedPath});
+    }
+    else {
+      this.setState({disabled:true});
     }
   }
   
