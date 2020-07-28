@@ -5,6 +5,7 @@ import SlycatFormRadioCheckbox from 'components/SlycatFormRadioCheckbox.tsx';
 import SlycatNumberInput from 'components/SlycatNumberInput.tsx';
 import SlycatTextInput from 'components/SlycatTextInput.tsx';
 import SlycatFormDropDown from 'components/SlycatFormDropDown.tsx';
+import SlycatTimeInput from 'components/SlycatTimeInput.tsx';
 import SlycatRemoteControls from 'components/SlycatRemoteControls.jsx';
 import ConnectButton from 'components/ConnectButton.tsx';
 import RemoteFileBrowser from 'components/RemoteFileBrowser.tsx'
@@ -185,9 +186,10 @@ export default class TimeseriesWizard extends React.Component<
               label={'Cores'}
               value={2}
             />
-            <SlycatNumberInput
+            <SlycatTimeInput
               label={'Requested Job Time'}
-              value={0}
+              hours={0}
+              minutes={30}
             />
             <SlycatTextInput
               label={"Working Directory"}
