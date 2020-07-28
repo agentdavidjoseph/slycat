@@ -195,6 +195,18 @@ export default class TimeseriesWizard extends React.Component<
             />                      
           </div>
         : null}
+        {this.state.visibleTab === "6" ? 
+          <div>
+            <SlycatTextInput
+              label={"Name"}
+              value={''}
+            />
+            <SlycatTextInput
+              label={"Description"}
+              value={''}
+            />
+          </div>
+        : null}
       </div>
     );
   }
