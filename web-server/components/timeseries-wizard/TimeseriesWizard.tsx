@@ -146,6 +146,16 @@ export default class TimeseriesWizard extends React.Component<
             />
           </div>
         : null}
+        {this.state.visibleTab === "3" ? 
+          <div>
+            <RemoteFileBrowser 
+            onSelectFileCallBack={this.onSelectTimeseriesFile}
+            onSelectParserCallBack={this.onSelectParser}
+            onReauthCallBack={this.onReauth}
+            hostname={this.state.hostname} 
+            />
+          </div>
+        : null}
       </div>
     );
   }
