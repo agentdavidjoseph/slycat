@@ -167,6 +167,34 @@ export default class TimeseriesWizard extends React.Component<
             />
           </div>
         : null}
+        {this.state.visibleTab === "5" ? 
+          <div>
+            <SlycatTextInput
+              label={"Account ID"}
+              value={''}
+            />
+            <SlycatTextInput
+              label={"Partition/Queue"}
+              value={''}
+            /> 
+            <SlycatNumberInput
+              label={'Number of nodes'}
+              value={1}
+            /> 
+            <SlycatNumberInput
+              label={'Cores'}
+              value={2}
+            />
+            <SlycatNumberInput
+              label={'Requested Job Time'}
+              value={0}
+            />
+            <SlycatTextInput
+              label={"Working Directory"}
+              value={''}
+            />                      
+          </div>
+        : null}
       </div>
     );
   }
