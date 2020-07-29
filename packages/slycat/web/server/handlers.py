@@ -986,22 +986,21 @@ def put_upload_file_part(uid, fid, pid, file=None, hostname=None, path=None):
 
     if file is not None and hostname is None and path is None:
         data = file.file.read()
+        with slycat.web.server.upload.get_session(uid) as session:
+            session.put_upload_file_part(fid, pid, data)
     elif file is None and hostname is not None and path is not None:
         sid = get_sid(hostname)
-        with slycat.web.server.remote.get_session(sid) as session:
-            filename = "%s@%s:%s" % (session.username, session.hostname, path)
-            if stat.S_ISDIR(session.sftp.stat(path).st_mode):
-                cherrypy.log.error("slycat.web.server.handlers.py put_upload_file_part",
-                                        "cherrypy.HTTPError 400 cannot load directory %s." % filename)
-                raise cherrypy.HTTPError("400 Cannot load directory %s." % filename)
-            data = session.sftp.file(path).read()
+        # check session this will throw an exception if it cant find the session
+        # will throw 404 if the session is not found
+        slycat.web.server.remote.get_session(sid)
+        with slycat.web.server.upload.get_session(uid) as session:
+            # this will start a thread to download the file using sftp 
+            # so as not to time out during this call
+            session.put_upload_remote_file_part(fid, pid, sid, path)
     else:
         cherrypy.log.error("slycat.web.server.handlers.py put_upload_file_part",
                                 "cherrypy.HTTPError 400 must supply file parameter, or sid and path parameters.")
         raise cherrypy.HTTPError("400 Must supply file parameter, or sid and path parameters.")
-
-    with slycat.web.server.upload.get_session(uid) as session:
-        session.put_upload_file_part(fid, pid, data)
 
 
 @cherrypy.tools.json_in(on=True)

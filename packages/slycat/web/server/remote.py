@@ -1030,6 +1030,7 @@ def get_session(sid, calling_client=None):
     session : :class:`slycat.web.server.remote.Session`
       Session object that encapsulates the connection to a remote host.
     """
+    cherrypy.log.error("session called for::::::: %s"%cherrypy.request.headers.get("x-forwarded-for"))
     if calling_client is None:
         client = cherrypy.request.headers.get("x-forwarded-for")
     else:
@@ -1089,10 +1090,10 @@ def get_session_server(client, sid):
                                         "cherrypy.HTTPError 404: client %s attempted to "
                                         "access remote session for %s@%s from %s" % (
                                             client, session.username, session.hostname, session.client))
-                raise cherrypy.HTTPError("404")
+                raise cherrypy.HTTPError("404 session was expired")
 
         if sid not in session_cache:
-            raise cherrypy.HTTPError("404 not a session")
+            raise cherrypy.HTTPError("404 not an active session")
 
         session = session_cache[sid]
         session._accessed = datetime.datetime.utcnow()

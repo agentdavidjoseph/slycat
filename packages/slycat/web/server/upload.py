@@ -36,15 +36,17 @@ import os
 import shutil
 import slycat.web.server.authentication
 import slycat.web.server.database
-
+import stat
 import threading
 import time
 import uuid
+import traceback
 
 
 session_cache = {}
 session_cache_lock = threading.Lock()
 parsing_locks = {}
+upload_locks = {}
 
 def root():
   if root.path is None:
@@ -87,6 +89,7 @@ class Session(object):
     self._accessed = now
     self._received = set()
     self._parsing_thread = None
+    self._upload_thread = None
     self._lock = threading.Lock()
 
   def __enter__(self):
@@ -123,6 +126,38 @@ class Session(object):
       file.write(data)
     self._received.add((fid, pid))
 
+  def put_upload_remote_file_part(self, fid, pid, sid, file_path):
+    storage = path(self._uid, fid, pid)
+    if not os.path.exists(os.path.dirname(storage)):
+      os.makedirs(os.path.dirname(storage))
+    self._upload_thread = threading.Thread(name="Uploading remote file", target=Session._remote_upload, args=[self, sid, fid, pid, file_path, storage, cherrypy.request.headers.get("x-forwarded-for")])
+    self._upload_thread.start()
+    cherrypy.response.status = "202 remote Upload session running."
+
+  def _remote_upload(self, sid, fid, pid, file_path, storage, client):
+    cherrypy.log.error("put_upload_remote_file_part thread running")
+    # get remote session for the host
+    if self._mid not in upload_locks:
+      upload_locks[self._mid] = threading.Lock()
+    with upload_locks[self._mid]:
+      with slycat.web.server.remote.get_session(sid, calling_client=client) as session:
+        # calculate the file path for sftp
+        filename = "%s@%s:%s" % (session.username, session.hostname, file_path)
+        # make sure we don't have a directory
+        if stat.S_ISDIR(session.sftp.stat(file_path).st_mode):
+            cherrypy.log.error("slycat.web.server.handlers.py put_upload_file_part",
+                                    "cherrypy.HTTPError 400 cannot load directory %s." % filename)
+            raise cherrypy.HTTPError("400 Cannot load directory %s." % filename)
+        # get the file from the remote host
+        cherrypy.log.error("downloading the file with sftp")
+        data = session.sftp.file(file_path).read()
+        cherrypy.log.error("file received")
+        with open(storage, "wb") as local_storage_file:
+          local_storage_file.write(data)
+        cherrypy.log.error("file written")
+        self._received.add((fid, pid))
+        cherrypy.log.error("added file to received")
+
   def post_upload_finished(self, uploaded):
     """
     checks for missing and excess files, if neither are found moves on to
@@ -140,7 +175,8 @@ class Session(object):
     """
     if self._parsing_thread is not None:
       raise cherrypy.HTTPError("409 Upload already finished.")
-
+    if self._upload_thread is not None and self._upload_thread.is_alive():
+      raise cherrypy.HTTPError("409 remote processing is not complete.")
     uploaded = {(fid, pid) for fid in range(len(uploaded)) for pid in range(uploaded[fid])}
     missing = [part for part in uploaded if part not in self._received]
     excess = [part for part in self._received if part not in uploaded]
