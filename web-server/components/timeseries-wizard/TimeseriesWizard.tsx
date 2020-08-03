@@ -52,6 +52,16 @@ export default class TimeseriesWizard extends React.Component<
       selectedPath: '',
       parserType: '',
       columnNames: null,
+      binCount: 500,
+      resamplingAlg: 'uniform-paa',
+      clusterLinkageMeasure: 'average',
+      accountId: '',
+      partition: '',
+      numNodes: 1,
+      cores: 2,
+      jobHours: 0,
+      jobMin: 30,
+      workDir: '',
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
     };
     initialState = _.cloneDeep(this.state);
@@ -133,11 +143,13 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatNumberInput
               label={'Timeseries Bin Count'}
               value={500}
+              callBack={this.onSelectTimeseriesBinCount}
             />
             <SlycatSelector
               label={'Resampling Algorithm'}
               options={[{'text':'uniform piecewise aggregate approximation', 'value':'uniform-paa'}, 
               {'text':'uniform piecewise linear approximation', 'value':'uniform-pla'}]}
+              onSelectCallBack={this.onSelectResamplingAlg}
             />
             <SlycatSelector
               label={'Cluster Linkage Measure'}
@@ -145,6 +157,7 @@ export default class TimeseriesWizard extends React.Component<
               {'text':'single: Nearest Point Algorithm', 'value':'single'},
               {'text':'complete: Farthest Point Algorithm', 'value':'complete'},
               {'text':'weighted: Weighted Pair Group Method with Arithmetic Mean (WPGMA) Algorithm','value':'weighted'}]}
+              onSelectCallBack={this.onSelectClusterLinkageMeasure}
             />
           </div>
         : null}
@@ -173,27 +186,34 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               label={"Account ID"}
               value={''}
+              callBack={this.onSelectAccountId}
             />
             <SlycatTextInput
               label={"Partition/Queue"}
               value={''}
+              callBack={this.onSelectPartition}
             /> 
             <SlycatNumberInput
               label={'Number of nodes'}
               value={1}
+              callBack={this.onSelectNumNodes}
             /> 
             <SlycatNumberInput
               label={'Cores'}
               value={2}
+              callBack={this.onSelectCores}
             />
             <SlycatTimeInput
               label={'Requested Job Time'}
               hours={0}
               minutes={30}
+              minCallBack={this.onSelectJobMinutes}
+              hourCallBack={this.onSelectJobHours}
             />
             <SlycatTextInput
               label={"Working Directory"}
               value={''}
+              callBack={this.onSelectWorkDir}
             />                      
           </div>
         : null}
@@ -360,6 +380,7 @@ export default class TimeseriesWizard extends React.Component<
     }
   }
 
+
   onSelectTimeseriesFile = (selectedPath, selectedPathType, file) => {
     // type is either 'd' for directory or 'f' for file
 
@@ -369,6 +390,46 @@ export default class TimeseriesWizard extends React.Component<
     else {
       this.setState({disabled:true});
     }
+  }
+
+  onSelectTimeseriesBinCount = (count) => {
+    this.setState({binCount: count});
+  }
+
+  onSelectResamplingAlg = (alg) => {
+    this.setState({resamplingAlg: alg});
+  }
+
+  onSelectClusterLinkageMeasure = (clusterLinkage) => {
+    this.setState({clusterLinkageMeasure: clusterLinkage});
+  }
+
+  onSelectAccountId = (id) => {
+    this.setState({accountId: id});
+  }
+
+  onSelectPartition = (part) => {
+    this.setState({partition: part});
+  }
+
+  onSelectNumNodes = (num) => {
+    this.setState({numNodes: num});
+  }
+
+  onSelectCores = (numCores) => {
+    this.setState({cores: numCores});
+  }
+
+  onSelectJobHours = (hours) => {
+    this.setState({jobHours: hours});
+  }
+
+  onSelectJobMinutes = (mins) => {
+    this.setState({jobMin: mins});
+  }
+
+  onSelectWorkDir = (dir) => {
+    this.setState({workDir: dir});
   }
 
   onSelectHDF5Directory = (selectedPath, selectedPathType, file) => {

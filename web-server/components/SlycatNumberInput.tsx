@@ -34,8 +34,8 @@ export default class SlycatNumberInput extends React.Component<SlycatNumberInput
 
   onValueChange = (value) => {
     // localStorage.setItem("slycat-remote-controls-username", value);
-    // this.setState({value: value});
-    this.setState({value:value});
+    this.setState({value: value});
+    this.props.callBack(value);
   };
 
   public render () {

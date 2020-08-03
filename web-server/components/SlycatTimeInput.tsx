@@ -37,10 +37,12 @@ export default class SlycatTimeInput extends React.Component<SlycatTimeInputProp
     // localStorage.setItem("slycat-remote-controls-username", value);
     // this.setState({value: value});
     this.setState({hours:value});
+    this.props.hourCallBack(value);
   };
 
   onMinuteChange = (value) => {
     this.setState({minutes:value});
+    this.props.minCallBack(value);
   }
 
   public render () {
