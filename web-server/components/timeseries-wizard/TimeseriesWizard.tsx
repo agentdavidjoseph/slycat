@@ -96,26 +96,38 @@ export default class TimeseriesWizard extends React.Component<
             <form className='ml-3'>
               <SlycatFormRadioCheckbox
                 checked={this.state.selectedOption === 'xyce'}
-                onChange={this.sourceSelect}
+                onChange={(value) => {
+                  this.setState({selectedOption: value});
+                }}
                 value={'xyce'}
                 text={'Xyce'}
               />
               <SlycatFormRadioCheckbox
                 checked={this.state.selectedOption === 'csv'}
-                onChange={this.sourceSelect}
+                onChange={(value) => {
+                  this.setState({selectedOption: value});
+                }}
                 value={'csv'}
                 text={'CSV'}
               />
               <SlycatFormRadioCheckbox
                 checked={this.state.selectedOption === 'hdf5'}
-                onChange={this.sourceSelect}
+                onChange={(value) => {
+                  this.setState({selectedOption: value});
+                }}
                 value={'hdf5'}
                 text={'HDF5'}
               />
             </form>
             <SlycatRemoteControls
             loadingData={this.state.loadingData} 
-            callBack={this.controlsCallBack}
+            callBack={(newHostname, newUsername, newPassword, sessionExists) => {
+              this.setState({      
+                hostname: newHostname,
+                sessionExists: sessionExists,
+                username: newUsername,
+                password: newPassword});
+            }}
             showConnectButton={false}
             />
           </div>
@@ -124,7 +136,9 @@ export default class TimeseriesWizard extends React.Component<
           <div>
             <RemoteFileBrowser 
               onSelectFileCallBack={this.onSelectTableFile}
-              onSelectParserCallBack={this.onSelectParser}
+              onSelectCallBack={(type) => {
+                this.setState({parserType: type});
+              }}
               onReauthCallBack={this.onReauth}
               hostname={this.state.hostname} 
             />
@@ -135,9 +149,14 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               label={"Table File Delimeter"}
               value={','}
+              callBack={(delim) => {
+                this.setState({delimeter: delim});
+              }}
             />
             <SlycatSelector
-              onSelectCallBack={this.props.onSelectParserCallBack}
+              onSelectCallBack={(type) => {
+                this.setState({parserType: type});
+              }}              
               label={'Timeseries Column Name'}
               options={this.state.columnNames}
             />
@@ -148,13 +167,17 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatNumberInput
               label={'Timeseries Bin Count'}
               value={500}
-              callBack={this.onSelectTimeseriesBinCount}
+              callBack={(count) => {
+                this.setState({binCount: count});
+              }}      
             />
             <SlycatSelector
               label={'Resampling Algorithm'}
               options={[{'text':'uniform piecewise aggregate approximation', 'value':'uniform-paa'}, 
               {'text':'uniform piecewise linear approximation', 'value':'uniform-pla'}]}
-              onSelectCallBack={this.onSelectResamplingAlg}
+              onSelectCallBack={(alg) => {
+                this.setState({resamplingAlg: alg});
+              }}
             />
             <SlycatSelector
               label={'Cluster Linkage Measure'}
@@ -162,7 +185,9 @@ export default class TimeseriesWizard extends React.Component<
               {'text':'single: Nearest Point Algorithm', 'value':'single'},
               {'text':'complete: Farthest Point Algorithm', 'value':'complete'},
               {'text':'weighted: Weighted Pair Group Method with Arithmetic Mean (WPGMA) Algorithm','value':'weighted'}]}
-              onSelectCallBack={this.onSelectClusterLinkageMeasure}
+              onSelectCallBack={(clusterLinkage) => {
+                this.setState({clusterLinkageMeasure: clusterLinkage});
+              }}
             />
           </div>
         : null}
@@ -170,7 +195,9 @@ export default class TimeseriesWizard extends React.Component<
           <div>
             <RemoteFileBrowser 
             onSelectFileCallBack={this.onSelectTimeseriesFile}
-            onSelectParserCallBack={this.onSelectParser}
+            onSelectParserCallBack={(type) => {
+              this.setState({parserType: type});
+            }}
             onReauthCallBack={this.onReauth}
             hostname={this.state.hostname} 
             />
@@ -180,7 +207,9 @@ export default class TimeseriesWizard extends React.Component<
           <div>
             <RemoteFileBrowser 
             onSelectFileCallBack={this.onSelectHDF5Directory}
-            onSelectParserCallBack={this.onSelectParser}
+            onSelectParserCallBack={(type) => {
+              this.setState({parserType: type});
+            }}
             onReauthCallBack={this.onReauth}
             hostname={this.state.hostname} 
             />
@@ -191,34 +220,48 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               label={"Account ID"}
               value={''}
-              callBack={this.onSelectAccountId}
+              callBack={(id) => {
+                this.setState({accountId: id});
+              }}
             />
             <SlycatTextInput
               label={"Partition/Queue"}
               value={''}
-              callBack={this.onSelectPartition}
+              callBack={(part) => {
+                this.setState({partition: part});
+              }}
             /> 
             <SlycatNumberInput
               label={'Number of nodes'}
               value={1}
-              callBack={this.onSelectNumNodes}
+              callBack={(num) => {
+                this.setState({numNodes: num});
+              }}
             /> 
             <SlycatNumberInput
               label={'Cores'}
               value={2}
-              callBack={this.onSelectCores}
+              callBack={(numCores) => {
+                this.setState({cores: numCores});
+              }}
             />
             <SlycatTimeInput
               label={'Requested Job Time'}
               hours={0}
               minutes={30}
-              minCallBack={this.onSelectJobMinutes}
-              hourCallBack={this.onSelectJobHours}
+              minCallBack={(mins) => {
+                this.setState({jobMin: mins});
+              }}
+              hourCallBack={(hours) => {
+                this.setState({jobHours: hours});
+              }}
             />
             <SlycatTextInput
               label={"Working Directory"}
               value={''}
-              callBack={this.onSelectWorkDir}
+              callBack={(dir) => {
+                this.setState({workDir: dir});
+              }}
             />                      
           </div>
         : null}
@@ -373,15 +416,6 @@ export default class TimeseriesWizard extends React.Component<
     });
   }
 
-  controlsCallBack = (newHostname, newUsername, newPassword, sessionExists) => {
-    this.setState({
-      hostname: newHostname,
-      sessionExists: sessionExists,
-      username: newUsername,
-      password: newPassword
-    });
-  };
-
   onReauth = () => {
     // Session has been lost, so update state to reflect this.
     this.setState({
@@ -424,46 +458,6 @@ export default class TimeseriesWizard extends React.Component<
     }
   }
 
-  onSelectTimeseriesBinCount = (count) => {
-    this.setState({binCount: count});
-  }
-
-  onSelectResamplingAlg = (alg) => {
-    this.setState({resamplingAlg: alg});
-  }
-
-  onSelectClusterLinkageMeasure = (clusterLinkage) => {
-    this.setState({clusterLinkageMeasure: clusterLinkage});
-  }
-
-  onSelectAccountId = (id) => {
-    this.setState({accountId: id});
-  }
-
-  onSelectPartition = (part) => {
-    this.setState({partition: part});
-  }
-
-  onSelectNumNodes = (num) => {
-    this.setState({numNodes: num});
-  }
-
-  onSelectCores = (numCores) => {
-    this.setState({cores: numCores});
-  }
-
-  onSelectJobHours = (hours) => {
-    this.setState({jobHours: hours});
-  }
-
-  onSelectJobMinutes = (mins) => {
-    this.setState({jobMin: mins});
-  }
-
-  onSelectWorkDir = (dir) => {
-    this.setState({workDir: dir});
-  }
-
   onSelectHDF5Directory = (selectedPath, selectedPathType, file) => {
     if(selectedPathType === 'd') {
       this.setState({hdf5Directory:selectedPath, disabled:false, selected_path:selectedPath});
@@ -480,15 +474,6 @@ export default class TimeseriesWizard extends React.Component<
     }
     this.setState({columnNames:columnNames});
   }
-
-  onSelectParser = (type) => {
-    this.setState({parserType:type});
-  }
-
-  sourceSelect = (value) =>
-  {
-    this.setState({selectedOption: value});
-  };
 
   cleanup = () => {
     this.setState(initialState);
