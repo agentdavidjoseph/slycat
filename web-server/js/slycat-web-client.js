@@ -1406,6 +1406,22 @@ module.get_user_config = function(params) {
   });
 };
 
+module.set_user_config_fetch = function(params)
+{
+  return fetch(`${api_root}remotes/${params.hostname}/set-user-config`, {
+    method: 'POST', 
+    body: JSON.stringify({config: params.config}), 
+    credentials: "same-origin", 
+    cache: "no-store", 
+    dataType: "json"})
+  .then(function(response) {
+    if (!response.ok) {
+        throw `bad response with: ${response.status} :: ${response.statusText}`;
+    }
+    return response.json();
+  });
+};
+
 module.set_user_config = function(params) {
   $.ajax({
     contentType: 'application/json',

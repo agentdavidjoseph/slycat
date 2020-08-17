@@ -55,6 +55,7 @@ export default class TimeseriesWizard extends React.Component<
       binCount: 500,
       resamplingAlg: 'uniform-paa',
       clusterLinkageMeasure: 'average',
+      clusterMetric: 'euclidean',
       accountId: '',
       partition: '',
       numNodes: 1,
@@ -62,6 +63,10 @@ export default class TimeseriesWizard extends React.Component<
       jobHours: 0,
       jobMin: 30,
       workDir: '',
+      userConfig: {'slurm': {}, 'timeseries-wizard': {}},
+      idCol: '%eval_id',
+      delimiter: ',',
+      timeseriesName: 'TEST',
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
     };
     initialState = _.cloneDeep(this.state);
@@ -295,6 +300,7 @@ export default class TimeseriesWizard extends React.Component<
       this.setState({visibleTab: '5'});
     }
     else if (this.state.visibleTab === '5') {
+      this.compute();
       this.setState({visibleTab: '6'});
     }
   };
@@ -327,6 +333,32 @@ export default class TimeseriesWizard extends React.Component<
     else if (this.state.visibleTab === '6') {
       this.setState({visibleTab: '5'});
     }
+  }
+
+  compute = () => {
+
+    let userConfig = {"slurm": {}, "timeseries-wizard": {}};
+    userConfig["slurm"]["wcid"] = this.state.accountId;
+    userConfig["slurm"]["partition"] = this.state.partition;
+    userConfig["slurm"]["workdir"] = this.state.workDir;
+    userConfig["slurm"]["time-hours"] = this.state.jobHours;
+    userConfig["slurm"]["time-minutes"] = this.state.jobMin;
+    userConfig["slurm"]["nnodes"] = this.state.numNodes;
+    userConfig["slurm"]["ntasks-per-node"] = this.state.cores;
+    userConfig["timeseries-wizard"]["id-column"] = this.state.idCol;
+    userConfig["timeseries-wizard"]["inputs-file-delimiter"] = this.state.delimiter;
+    userConfig["timeseries-wizard"]["timeseries-name"] = this.state.timeseriesName;
+
+    client.set_user_config({
+      hostname: this.state.hostname,
+      config: userConfig,
+      success: function(response) { },
+      error: function(request, status, reason_phrase) {
+        console.log(reason_phrase);
+      }
+    });
+
+    this.on_slycat_fn();
   }
 
   connectButtonCallBack = (sessionExists, loadingData) => {
@@ -473,6 +505,233 @@ export default class TimeseriesWizard extends React.Component<
     }).then((result) => {
       this.setState({model: result});
     })
+  };
+
+  generateUniqueId = () => {
+    var d = Date.now();
+    var uid = 'xxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c === 'x' ? r : (r&0x3|0x8)).toString(16);
+    });
+
+    return uid;
+  };
+
+  on_slycat_fn = () => {
+    let agent_function = 'timeseries-model';
+    let uid = this.generateUniqueId();
+
+    let fn_params = {
+      'timeseries_type': this.state.selected_option, 
+      'inputs_file': this.state.tableFile, 
+      'input_directory': this.state.selectedPath,
+      'id_column': this.state.idCol, 
+      'inputs_file_delimiter': this.state.delimiter, 
+      'xyce_timeseries_file': this.state.timeseriesFile, 
+      'timeseries_name': this.state.timeseriesName, 
+      'cluster_sample_count': this.state.binCount, 
+      'cluster_sample_type': this.state.resamplingAlg, 
+      'cluster_type': this.state.clusterLinkageMeasure, 
+      'cluster_metric': this.state.clusterMetric, 
+      'workdir': this.state.workDir,
+      'hdf5_directory': this.state.hdf5Directory,
+      'retain_hdf5': true
+    }
+
+    var fn_params_copy = $.extend(true, {}, fn_params);
+
+    if(fn_params.timeseries_type !== 'csv')
+    {
+      // Blank out timeseries_name
+      fn_params_copy.timeseries_name = "";
+
+    }
+    
+    var json_payload =
+    {
+      "scripts": [
+      ],
+      "hpc": {
+          "is_hpc_job": true,
+          "parameters": {
+              "wckey" : this.state.accountId,
+              "nnodes" : this.state.numNodes,
+              "partition" : this.state.partition,
+              "ntasks_per_node" : this.state.cores,
+              "time_hours" : this.state.jobHours,
+              "time_minutes" : this.state.jobMin,
+              "time_seconds" : 0,
+              "working_dir" : fn_params.workdir + "/slycat/"
+          }
+      }
+    };
+
+    var hdf5_dir = fn_params.workdir + "/slycat/" + uid + "/" + "hdf5/";
+    var pickle_dir = fn_params.workdir + "/slycat/" + uid + "/" + "pickle/";
+
+    if (fn_params.timeseries_type === "csv")
+    {
+      json_payload.scripts.push({
+          "name": "timeseries_to_hdf5",
+          "parameters": [
+              {
+                  "name": "--output-directory",
+                  "value": hdf5_dir
+              },
+              {
+                  "name": "--id-column",
+                  "value": fn_params.id_column
+              },
+              {
+                  "name": "--inputs-file",
+                  "value": fn_params.inputs_file
+              },
+              {
+                  "name": "--inputs-file-delimiter",
+                  "value": fn_params.inputs_file_delimiter
+              },
+              {
+                  "name": "--force",
+                  "value": ""
+              }
+          ]
+      });
+    }
+    else if(fn_params.timeseries_type === "xyce")
+    {
+      json_payload.scripts.push({
+          "name": "xyce_timeseries_to_hdf5",
+          "parameters": [
+              {
+                  "name": "--output-directory",
+                  "value": hdf5_dir
+              },
+              {
+                  "name": "--id-column",
+                  "value": fn_params.id_column
+              },
+              {
+                  "name": "--timeseries-file",
+                  "value": fn_params.xyce_timeseries_file
+              },
+              {
+                  "name": "--input-directory",
+                  "value": fn_params.input_directory
+              },
+              {
+                  "name": "--force",
+                  "value": ""
+              }
+          ]
+      });
+    }
+        // # check if we have a pre-set hdf5 directory
+        // if "hdf5_directory" in params and params["hdf5_directory"] != "":
+        //     hdf5_dir = params["hdf5_directory"]
+
+    if (fn_params.timeseries_type === "csv")
+    {
+      json_payload.scripts.push({
+          "name": "compute_timeseries",
+          "parameters": [
+              {
+                  "name": "--directory",
+                  "value": hdf5_dir
+              },
+              {
+                  "name": "--timeseries-name",
+                  "value": fn_params.timeseries_name
+              },
+              {
+                  "name": "--cluster-sample-count",
+                  "value": fn_params.cluster_sample_count
+              },
+              {
+                  "name": "--cluster-sample-type",
+                  "value": fn_params.cluster_sample_type
+              },
+              {
+                  "name": "--cluster-type",
+                  "value": fn_params.cluster_type
+              },
+              {
+                  "name": "--cluster-metric",
+                  "value": fn_params.cluster_metric
+              },
+              {
+                  "name": "--workdir",
+                  "value": pickle_dir
+              },
+              {
+                  "name": "--hash",
+                  "value": uid
+              }
+          ]
+      });
+    }
+    else
+    {
+      json_payload.scripts.push({
+            "name": "compute_timeseries",
+            "parameters": [
+                {
+                    "name": "--directory",
+                    "value": hdf5_dir
+                },
+                {
+                    "name": "--cluster-sample-count",
+                    "value": fn_params.cluster_sample_count
+                },
+                {
+                    "name": "--cluster-sample-type",
+                    "value": fn_params.cluster_sample_type
+                },
+                {
+                    "name": "--cluster-type",
+                    "value": fn_params.cluster_type
+                },
+                {
+                    "name": "--cluster-metric",
+                    "value": fn_params.cluster_metric
+                },
+                {
+                    "name": "--workdir",
+                    "value": pickle_dir
+                },
+                {
+                    "name": "--hash",
+                    "value": uid
+                }
+            ]
+        });
+    }
+
+    client.post_remote_command({
+      hostname: this.state.hostname,
+      command: json_payload,
+      success: function(results) {
+        if (!results.errors) {
+          console.log("Success");
+          // alert('[Error] Could not start batch file for Slycat pre-built function ' + fn + ': ' + results.errors);
+          // vm.on_error_callback();
+          return void 0;
+        }
+
+        // if (vm.on_submit_callback)
+        //   vm.on_submit_callback();
+        const splitResult = results.errors.replace(/(\r\n\t|\n|\r\t)/gm,"").split(" ");
+        const jid =  splitResult[splitResult.length-1];
+        // vm.jid(jid);
+        // vm.working_directory(fn_params.workdir + "/slycat/" + uid + "/");
+        // server_update_model_info(uid);
+      },
+      error: function(request, status, reason_phrase) {
+        console.log("Error");
+        // alert('[Error] Could not start batch file: ' + reason_phrase);
+        // vm.on_error_callback();
+      }
+    });
   };
 
   render() {
