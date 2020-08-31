@@ -214,7 +214,7 @@ for i in range(0, num_rows):
 
     split_path = frame_files[i].split(frame_file_path)
     file_location = split_path[0]
-    # check 
+    # check if the user has a slash already add one if it is not present
     if args.movie_dir[-1] == '/':
         movie_output = args.movie_dir + 'movie_%d.mp4' % (i+1)
     else:
