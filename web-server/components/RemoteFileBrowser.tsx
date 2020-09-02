@@ -19,7 +19,7 @@ export interface RemoteFileBrowserProps {
   hostname: string
   persistenceId?: string
   onSelectFileCallBack: Function
-  onSelectParserCallBack: Function
+  onSelectParserCallBack?: Function
   onReauthCallBack: Function
 }
 
@@ -378,7 +378,7 @@ export default class RemoteFileBrowser extends React.Component<RemoteFileBrowser
             Loading...
           </button>}
           <SlycatSelector
-            onSelectCallBack={this.props.onSelectParserCallBack}
+            onSelectCallBack={this.props.onSelectParserCallBack ? this.props.onSelectParserCallBack : () => {}}
             label={'Filetype'}
             options={options}
           />

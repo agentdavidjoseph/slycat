@@ -773,7 +773,7 @@ module.post_sensitive_model_command_fetch = function(params, successFunction, er
     if (!response.ok) {
         throw `bad response with: ${response.status} :: ${response.statusText}`;
     }
-    return response.json();
+    return response;
   }).catch((error) => {
     if (errorFunction) {
       errorFunction(error)
@@ -1441,6 +1441,33 @@ module.set_user_config = function(params) {
   });
 };
 
+module.post_remote_command_fetch = function(params, successFunction, errorFunction)
+{
+  return fetch(`${api_root}remotes/${params.hostname}/post-remote-command`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        dataType: "json",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({"command": params.command})
+      })
+  .then(function(response) {
+    if (!response.ok) {
+        throw `bad response with: ${response.status} :: ${response.statusText}`;
+    }
+    return response.json();
+  }).catch((error) => {
+    if (errorFunction) {
+      errorFunction(error)
+    }else{
+      console.log(error);
+    }
+  });
+};
+
 module.post_remote_command = function(params) {
   $.ajax({
     contentType: 'application/json',
@@ -1699,6 +1726,40 @@ module.delete_model_parameter = function(params)
       if(params.error)
         params.error(request, status, reason_phrase);
     }
+  });
+};
+
+module.put_model_fetch = function(params)
+{
+  var model = {};
+  if("name" in params)
+    model.name = params.name;
+  if("description" in params)
+    model.description = params.description;
+  if("marking" in params)
+    model.marking = params.marking;
+  if("state" in params)
+    model.state = params.state;
+  if("bookmark" in params)
+    model.bookmark = params.bookmark;
+
+  return fetch(`${api_root}models/${params.mid}`, 
+  {
+    method: "PUT", 
+    credentials: "same-origin",
+    cache: "no-store",
+    dataType: "json",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(model),
+  })
+  .then(function(response) {
+    if (!response.ok) {
+        throw `bad response with: ${response.status} :: ${response.statusText}`;
+    }
+    console.log("RESPONSE");
+    console.log(response);
   });
 };
 

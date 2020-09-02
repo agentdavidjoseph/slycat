@@ -4,11 +4,10 @@ import * as React from 'react';
 /**
  */
 export interface SlycatTimeInputProps {
-  checked: boolean
-  onChange: Function
-  value: string
-  text: string
-  style: any
+  hours: number
+  minutes: number
+  minCallBack: Function
+  hourCallBack: Function
   label: string
 }
 
@@ -16,6 +15,8 @@ export interface SlycatTimeInputProps {
  * not used
  */
 export interface SlycatTimeInputState {
+  hours: number
+  minutes: number
 }
 /**
  * class that creates a a form with checkboxes

@@ -4,18 +4,17 @@ import * as React from 'react';
 /**
  */
 export interface SlycatNumberInputProps {
-  checked: boolean
-  onChange: Function
-  value: string
-  text: string
-  style: any
+  value: number
+  style?: any
   label: string
+  callBack: Function
 }
 
 /**
  * not used
  */
 export interface SlycatNumberInputState {
+  value: number
 }
 /**
  * class that creates a a form with checkboxes
@@ -32,7 +31,7 @@ export default class SlycatNumberInput extends React.Component<SlycatNumberInput
     }
   }
 
-  onValueChange = (value) => {
+  onValueChange = (value:number) => {
     // localStorage.setItem("slycat-remote-controls-username", value);
     this.setState({value: value});
     this.props.callBack(value);

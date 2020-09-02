@@ -4,18 +4,18 @@ import * as React from 'react';
 /**
  */
 export interface SlycatTextInputProps {
-  checked: boolean
-  onChange: Function
+  onChange?: Function
   value: string
-  text: string
-  style: any
+  style?: any
   label: string
+  callBack: Function
 }
 
 /**
  * not used
  */
 export interface SlycatTextInputState {
+  value: string
 }
 /**
  * class that creates a a form with checkboxes
@@ -32,7 +32,7 @@ export default class SlycatTextInput extends React.Component<SlycatTextInputProp
     }
   }
 
-  onValueChange = (value) => {
+  onValueChange = (value:string) => {
     // localStorage.setItem("slycat-remote-controls-username", value);
     // this.setState({value: value});
     this.setState({value:value});

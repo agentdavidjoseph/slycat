@@ -10,18 +10,57 @@ import SlycatRemoteControls from 'components/SlycatRemoteControls.jsx';
 import ConnectButton from 'components/ConnectButton.tsx';
 import RemoteFileBrowser from 'components/RemoteFileBrowser.tsx'
 import SlycatSelector from 'components/SlycatSelector.tsx';
-
-// import client from "../../js/slycat-web-client";
-
-/**
- * not used
- */
-export interface TimeseriesWizardProps {}
+import server_root from "js/slycat-server-root";
+import cloneDeep from "lodash";
 
 /**
  * not used
  */
-export interface TimeseriesWizardState {}
+export interface TimeseriesWizardProps {
+  project: any;
+}
+
+/**
+ * not used
+ */
+export interface TimeseriesWizardState {
+  project: any;
+  model: {_id: string};
+  modalId: string;
+  jid: string;
+  visibleTab: string;
+  selectedOption: string;
+  loadingData: boolean;
+  hostname: string;
+  sessionExists: boolean;
+  username: string;
+  password: string;
+  hdf5Directory: string;
+  selectedTablePath: string;
+  selectedXycePath: string;
+  inputDirectory: string;
+  parserType: string;
+  columnNames: {text:string, value:string}[];
+  timeseriesColumn: string;
+  binCount: number;
+  resamplingAlg: string;
+  clusterLinkageMeasure: string;
+  clusterMetric: string;
+  accountId: string;
+  partition: string;
+  numNodes: number;
+  cores: number;
+  jobHours: number;
+  jobMin: number;
+  workDir: string;
+  userConfig: {'slurm': {}, 'timeseries-wizard': {}},
+  idCol: string;
+  delimiter: string;
+  timeseriesName: string;
+  modelDescription: string;
+  TimeSeriesLocalStorage: any;
+  validForms: boolean;
+}
 
 /**
  * modal wizard for the timeseries model creation
@@ -39,19 +78,21 @@ export default class TimeseriesWizard extends React.Component<
       project: this.props.project,
       model: {_id: ''},
       modalId: "slycat-wizard",
+      jid: '',
       visibleTab: '0',
       selectedOption: 'xyce',
       loadingData: false,
       hostname: '',
-      sessionExists: null,
+      sessionExists: false,
       username: '',
       password: '',
-      tableFile: [new File([""], "filename")],
-      timeseriesFile: [new File([""], "filename")],
       hdf5Directory: '',
-      selectedPath: '',
+      selectedTablePath: '',
+      selectedXycePath: '',
+      inputDirectory: '',
       parserType: '',
-      columnNames: null,
+      columnNames: [],
+      timeseriesColumn: '',
       binCount: 500,
       resamplingAlg: 'uniform-paa',
       clusterLinkageMeasure: 'average',
@@ -67,9 +108,11 @@ export default class TimeseriesWizard extends React.Component<
       idCol: '%eval_id',
       delimiter: ',',
       timeseriesName: 'TEST',
+      modelDescription: 'TEST',
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
+      validForms: true,
     };
-    initialState = _.cloneDeep(this.state);
+    initialState = cloneDeep(this.state);
     this.create_model();
   }
 
@@ -96,7 +139,7 @@ export default class TimeseriesWizard extends React.Component<
             <form className='ml-3'>
               <SlycatFormRadioCheckbox
                 checked={this.state.selectedOption === 'xyce'}
-                onChange={(value) => {
+                onChange={(value:string) => {
                   this.setState({selectedOption: value});
                 }}
                 value={'xyce'}
@@ -104,7 +147,7 @@ export default class TimeseriesWizard extends React.Component<
               />
               <SlycatFormRadioCheckbox
                 checked={this.state.selectedOption === 'csv'}
-                onChange={(value) => {
+                onChange={(value:string) => {
                   this.setState({selectedOption: value});
                 }}
                 value={'csv'}
@@ -112,7 +155,7 @@ export default class TimeseriesWizard extends React.Component<
               />
               <SlycatFormRadioCheckbox
                 checked={this.state.selectedOption === 'hdf5'}
-                onChange={(value) => {
+                onChange={(value:string) => {
                   this.setState({selectedOption: value});
                 }}
                 value={'hdf5'}
@@ -121,7 +164,7 @@ export default class TimeseriesWizard extends React.Component<
             </form>
             <SlycatRemoteControls
             loadingData={this.state.loadingData} 
-            callBack={(newHostname, newUsername, newPassword, sessionExists) => {
+            callBack={(newHostname:string, newUsername:string, newPassword:string, sessionExists:boolean) => {
               this.setState({      
                 hostname: newHostname,
                 sessionExists: sessionExists,
@@ -136,9 +179,6 @@ export default class TimeseriesWizard extends React.Component<
           <div>
             <RemoteFileBrowser 
               onSelectFileCallBack={this.onSelectTableFile}
-              onSelectCallBack={(type) => {
-                this.setState({parserType: type});
-              }}
               onReauthCallBack={this.onReauth}
               hostname={this.state.hostname} 
             />
@@ -149,13 +189,13 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               label={"Table File Delimeter"}
               value={','}
-              callBack={(delim) => {
-                this.setState({delimeter: delim});
+              callBack={(delim:string) => {
+                this.setState({delimiter: delim});
               }}
             />
             <SlycatSelector
-              onSelectCallBack={(type) => {
-                this.setState({parserType: type});
+              onSelectCallBack={(type:string) => {
+                this.setState({timeseriesColumn: type});
               }}              
               label={'Timeseries Column Name'}
               options={this.state.columnNames}
@@ -167,7 +207,7 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatNumberInput
               label={'Timeseries Bin Count'}
               value={500}
-              callBack={(count) => {
+              callBack={(count:number) => {
                 this.setState({binCount: count});
               }}      
             />
@@ -175,7 +215,7 @@ export default class TimeseriesWizard extends React.Component<
               label={'Resampling Algorithm'}
               options={[{'text':'uniform piecewise aggregate approximation', 'value':'uniform-paa'}, 
               {'text':'uniform piecewise linear approximation', 'value':'uniform-pla'}]}
-              onSelectCallBack={(alg) => {
+              onSelectCallBack={(alg:string) => {
                 this.setState({resamplingAlg: alg});
               }}
             />
@@ -185,7 +225,7 @@ export default class TimeseriesWizard extends React.Component<
               {'text':'single: Nearest Point Algorithm', 'value':'single'},
               {'text':'complete: Farthest Point Algorithm', 'value':'complete'},
               {'text':'weighted: Weighted Pair Group Method with Arithmetic Mean (WPGMA) Algorithm','value':'weighted'}]}
-              onSelectCallBack={(clusterLinkage) => {
+              onSelectCallBack={(clusterLinkage:string) => {
                 this.setState({clusterLinkageMeasure: clusterLinkage});
               }}
             />
@@ -195,9 +235,6 @@ export default class TimeseriesWizard extends React.Component<
           <div>
             <RemoteFileBrowser 
             onSelectFileCallBack={this.onSelectTimeseriesFile}
-            onSelectParserCallBack={(type) => {
-              this.setState({parserType: type});
-            }}
             onReauthCallBack={this.onReauth}
             hostname={this.state.hostname} 
             />
@@ -207,9 +244,6 @@ export default class TimeseriesWizard extends React.Component<
           <div>
             <RemoteFileBrowser 
             onSelectFileCallBack={this.onSelectHDF5Directory}
-            onSelectParserCallBack={(type) => {
-              this.setState({parserType: type});
-            }}
             onReauthCallBack={this.onReauth}
             hostname={this.state.hostname} 
             />
@@ -220,28 +254,28 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               label={"Account ID"}
               value={''}
-              callBack={(id) => {
+              callBack={(id:string) => {
                 this.setState({accountId: id});
               }}
             />
             <SlycatTextInput
               label={"Partition/Queue"}
               value={''}
-              callBack={(part) => {
+              callBack={(part:string) => {
                 this.setState({partition: part});
               }}
             /> 
             <SlycatNumberInput
               label={'Number of nodes'}
               value={1}
-              callBack={(num) => {
+              callBack={(num:number) => {
                 this.setState({numNodes: num});
               }}
             /> 
             <SlycatNumberInput
               label={'Cores'}
               value={2}
-              callBack={(numCores) => {
+              callBack={(numCores:number) => {
                 this.setState({cores: numCores});
               }}
             />
@@ -249,17 +283,17 @@ export default class TimeseriesWizard extends React.Component<
               label={'Requested Job Time'}
               hours={0}
               minutes={30}
-              minCallBack={(mins) => {
+              minCallBack={(mins:number) => {
                 this.setState({jobMin: mins});
               }}
-              hourCallBack={(hours) => {
+              hourCallBack={(hours:number) => {
                 this.setState({jobHours: hours});
               }}
             />
             <SlycatTextInput
               label={"Working Directory"}
               value={''}
-              callBack={(dir) => {
+              callBack={(dir:string) => {
                 this.setState({workDir: dir});
               }}
             />                      
@@ -270,10 +304,16 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               label={"Name"}
               value={''}
+              callBack={(name:string) => {
+                this.setState({timeseriesName: name});
+              }}
             />
             <SlycatTextInput
               label={"Description"}
               value={''}
+              callBack={(description:string) => {
+                this.setState({modelDescription: description});
+              }}
             />
           </div>
         : null}
@@ -281,7 +321,7 @@ export default class TimeseriesWizard extends React.Component<
     );
   }
 
-  getFooterJSX(): JSX.Element {
+  getFooterJSX(): JSX.Element[] {
     let footerJSX = [];
     if(this.state.visibleTab != "0"){
       footerJSX.push(
@@ -290,10 +330,11 @@ export default class TimeseriesWizard extends React.Component<
       </button>
       );
     }
+    const isDisabled = this.state.visibleTab === '1' && this.state.selectedTablePath === ''
+    const continueClassNames = isDisabled ? 
+    'btn btn-primary disabled' : 'btn btn-primary';
+
     if(this.state.visibleTab == '0' && this.state.sessionExists != true) {
-      // footerJSX.push(<button key={4} type='button' className='btn btn-primary' onClick={this.continue}>
-      // Continue
-      // </button>)
       footerJSX.push(
       <ConnectButton
         key={3}
@@ -307,44 +348,54 @@ export default class TimeseriesWizard extends React.Component<
     }
     else {
       footerJSX.push( 
-        <button key={4} type='button' className='btn btn-primary' onClick={this.continue}>
+        <button disabled={isDisabled} key={4} type='button' className={continueClassNames} onClick={this.continue}>
         Continue
         </button>
       )
     }
-    // return <div>footer</div>;
     return footerJSX;
   }
 
-  continue = () =>
-  {
-    if (this.state.visibleTab === '0' && this.state.selectedOption != 'hdf5') {
-      this.setState({visibleTab: '1'});
+  validateFields = () => {
+    if (this.state.visibleTab === '1' && this.state.selectedTablePath == '') {
+      this.setState({validForms: false});
     }
-    else if (this.state.visibleTab === '0' && this.state.selectedOption == 'hdf5') {
-      this.setState({visibleTab: '2'});
-    }
-    else if (this.state.visibleTab === '1') {
-      this.setState({visibleTab: '2'});
-    }
-    else if (this.state.visibleTab === '2' && this.state.selectedOption == 'xyce') {
-      this.setState({visibleTab: '3'});
-    }
-    else if (this.state.visibleTab === '2' && this.state.selectedOption == 'csv') {
-      this.setState({visibleTab: '5'});
-    }
-    else if (this.state.visibleTab === '2' && this.state.selectedOption == 'hdf5') {
-      this.setState({visibleTab: '4'});
-    }
-    else if (this.state.visibleTab === '3') {
-      this.setState({visibleTab: '5'});
-    }
-    else if (this.state.visibleTab === '4') {
-      this.setState({visibleTab: '5'});
-    }
-    else if (this.state.visibleTab === '5') {
-      this.compute();
-      this.setState({visibleTab: '6'});
+  }
+
+  continue = () => {
+    if (this.state.validForms == true) {
+
+      if (this.state.visibleTab === '0' && this.state.selectedOption != 'hdf5') {
+        this.setState({visibleTab: '1'});
+      }
+      else if (this.state.visibleTab === '0' && this.state.selectedOption == 'hdf5') {
+        this.setState({visibleTab: '2'});
+      }
+      else if (this.state.visibleTab === '1') {
+        this.setState({visibleTab: '2'});
+      }
+      else if (this.state.visibleTab === '2' && this.state.selectedOption == 'xyce') {
+        this.setState({visibleTab: '3'});
+      }
+      else if (this.state.visibleTab === '2' && this.state.selectedOption == 'csv') {
+        this.setState({visibleTab: '5'});
+      }
+      else if (this.state.visibleTab === '2' && this.state.selectedOption == 'hdf5') {
+        this.setState({visibleTab: '4'});
+      }
+      else if (this.state.visibleTab === '3') {
+        this.setState({visibleTab: '5'});
+      }
+      else if (this.state.visibleTab === '4') {
+        this.setState({visibleTab: '5'});
+      }
+      else if (this.state.visibleTab === '5') {
+        this.compute();
+        this.setState({visibleTab: '6'});
+      }
+      else if (this.state.visibleTab === '6') {
+        this.name_model();
+      }
     }
   };
 
@@ -380,7 +431,7 @@ export default class TimeseriesWizard extends React.Component<
 
   compute = () => {
 
-    let userConfig = {"slurm": {}, "timeseries-wizard": {}};
+    let userConfig:any = {"slurm": {}, "timeseries-wizard": {}};
     userConfig["slurm"]["wcid"] = this.state.accountId;
     userConfig["slurm"]["partition"] = this.state.partition;
     userConfig["slurm"]["workdir"] = this.state.workDir;
@@ -390,13 +441,13 @@ export default class TimeseriesWizard extends React.Component<
     userConfig["slurm"]["ntasks-per-node"] = this.state.cores;
     userConfig["timeseries-wizard"]["id-column"] = this.state.idCol;
     userConfig["timeseries-wizard"]["inputs-file-delimiter"] = this.state.delimiter;
-    userConfig["timeseries-wizard"]["timeseries-name"] = this.state.timeseriesName;
+    userConfig["timeseries-wizard"]["timeseries-name"] = this.state.timeseriesColumn;
 
     client.set_user_config({
       hostname: this.state.hostname,
       config: userConfig,
-      success: function(response) { },
-      error: function(request, status, reason_phrase) {
+      success: function(response:any) { },
+      error: function(request:Request, status:any, reason_phrase:any) {
         console.log(reason_phrase);
       }
     });
@@ -404,11 +455,10 @@ export default class TimeseriesWizard extends React.Component<
     this.on_slycat_fn();
   }
 
-  connectButtonCallBack = (sessionExists, loadingData) => {
+  connectButtonCallBack = (sessionExists:boolean, loadingData:boolean) => {
     this.setState({
       sessionExists,
       loadingData,
-      reauth: false,
     },()=>{
       if(this.state.sessionExists){
         this.continue();
@@ -420,20 +470,17 @@ export default class TimeseriesWizard extends React.Component<
     // Session has been lost, so update state to reflect this.
     this.setState({
       sessionExists: false,
-      reauth: true,
     });
     // Switch to login controls
-    this.setState({visible_tab: "2", selectedNameIndex: 1});
+    this.setState({visibleTab: "2"});
   }
 
-  onSelectTableFile = (selectedPath, selectedPathType, file) => {
+  onSelectTableFile = (selectedPath:string, selectedPathType:string) => {
     // type is either 'd' for directory or 'f' for file
-
     if(selectedPathType === 'f') {
-      this.setState({tableFile:file, disabled:false, selected_path:selectedPath});
-    }
-    else {
-      this.setState({disabled:true});
+      var inputDirectory = selectedPath.substring(0, selectedPath.lastIndexOf('/') + 1);
+      this.setState({selectedTablePath:selectedPath});
+      this.setState({inputDirectory: inputDirectory});
     }
     if(this.state.selectedOption === 'csv') {
       client.get_time_series_names_fetch({
@@ -441,43 +488,37 @@ export default class TimeseriesWizard extends React.Component<
         path: selectedPath,
       }).then((result) => {
         this.handleColumnNames(result);
-        // this.setState({columnNames:result});
       })
     }
   }
 
 
-  onSelectTimeseriesFile = (selectedPath, selectedPathType, file) => {
+  onSelectTimeseriesFile = (selectedPath:string, selectedPathType:string) => {
     // type is either 'd' for directory or 'f' for file
 
     if(selectedPathType === 'f') {
-      this.setState({timeseriesFile:file, disabled:false, selected_path:selectedPath});
-    }
-    else {
-      this.setState({disabled:true});
+      this.setState({selectedXycePath:selectedPath});
     }
   }
 
-  onSelectHDF5Directory = (selectedPath, selectedPathType, file) => {
+  onSelectHDF5Directory = (selectedPath:string, selectedPathType:string) => {
     if(selectedPathType === 'd') {
-      this.setState({hdf5Directory:selectedPath, disabled:false, selected_path:selectedPath});
-    }
-    else {
-      this.setState({disabled:true});
+      this.setState({hdf5Directory:selectedPath});
     }
   }
   
-  handleColumnNames = (names) => {
+  handleColumnNames = (names:[]) => {
     const columnNames = [];
     for(let i = 0; i < names.length; i++) {
       columnNames.push({text:names[i], value:names[i]});
     }
     this.setState({columnNames:columnNames});
+    this.setState({timeseriesColumn:columnNames[0]['value']});
   }
 
   cleanup = () => {
     this.setState(initialState);
-    client.delete_model_fetch({ mid: this.state.model['id'] });
+    client.delete_model_fetch({ mid: this.state.model['_id'] });
   };
 
   create_model = () => {
@@ -508,13 +549,13 @@ export default class TimeseriesWizard extends React.Component<
     let uid = this.generateUniqueId();
 
     let fn_params = {
-      'timeseries_type': this.state.selected_option, 
-      'inputs_file': this.state.tableFile, 
-      'input_directory': this.state.selectedPath,
+      'timeseries_type': this.state.selectedOption, 
+      'inputs_file': this.state.selectedTablePath, 
+      'input_directory': this.state.inputDirectory,
       'id_column': this.state.idCol, 
       'inputs_file_delimiter': this.state.delimiter, 
-      'xyce_timeseries_file': this.state.timeseriesFile, 
-      'timeseries_name': this.state.timeseriesName, 
+      'xyce_timeseries_file': this.state.selectedXycePath, 
+      'timeseries_name': this.state.timeseriesColumn, 
       'cluster_sample_count': this.state.binCount, 
       'cluster_sample_type': this.state.resamplingAlg, 
       'cluster_type': this.state.clusterLinkageMeasure, 
@@ -530,10 +571,9 @@ export default class TimeseriesWizard extends React.Component<
     {
       // Blank out timeseries_name
       fn_params_copy.timeseries_name = "";
-
     }
     
-    var json_payload =
+    let json_payload:any =
     {
       "scripts": [
       ],
@@ -552,8 +592,8 @@ export default class TimeseriesWizard extends React.Component<
       }
     };
 
-    var hdf5_dir = fn_params.workdir + "/slycat/" + uid + "/" + "hdf5/";
-    var pickle_dir = fn_params.workdir + "/slycat/" + uid + "/" + "pickle/";
+    var hdf5_dir = fn_params.workdir + "/slycat/" + uid + "/" + "hdf5";
+    var pickle_dir = fn_params.workdir + "/slycat/" + uid + "/" + "pickle";
 
     if (fn_params.timeseries_type === "csv")
     {
@@ -692,31 +732,93 @@ export default class TimeseriesWizard extends React.Component<
         });
     }
 
-    client.post_remote_command({
+    client.post_remote_command_fetch({
       hostname: this.state.hostname,
       command: json_payload,
-      success: function(results) {
-        if (!results.errors) {
-          console.log("Success");
-          // alert('[Error] Could not start batch file for Slycat pre-built function ' + fn + ': ' + results.errors);
-          // vm.on_error_callback();
-          return void 0;
-        }
+    }).then((results) => {
+      console.log("FINISHED");
+      const splitResult = results.errors.replace(/(\r\n\t|\n|\r\t)/gm,"").split(" ");
+      const newJid =  splitResult[splitResult.length-1];
+      this.setState({jid: newJid});
+      console.log("UPDATING MODEL INFO");
+      this.server_update_model_info(uid);
+    })
+  };
 
-        // if (vm.on_submit_callback)
-        //   vm.on_submit_callback();
-        const splitResult = results.errors.replace(/(\r\n\t|\n|\r\t)/gm,"").split(" ");
-        const jid =  splitResult[splitResult.length-1];
-        // vm.jid(jid);
-        // vm.working_directory(fn_params.workdir + "/slycat/" + uid + "/");
-        // server_update_model_info(uid);
-      },
-      error: function(request, status, reason_phrase) {
-        console.log("Error");
-        // alert('[Error] Could not start batch file: ' + reason_phrase);
-        // vm.on_error_callback();
-      }
+  server_update_model_info = (uid:string) => {
+    if (!this.state.model["_id"])
+      return void 0;
+
+      var working_directory = this.state.workDir + "/slycat/" + uid + "/";
+
+    let agent_function_params = {
+      "timeseries_type": this.state.selectedOption,
+      "inputs_file": this.state.selectedTablePath,
+      // "input_directory": this.state.selected_path,
+      "input_directory": '',
+      "id_column": this.state.idCol,
+      "inputs_file_delimeter": this.state.delimiter,
+      // "xyce_timeseries_file": this.state.timeseriesFile,
+      "xyce_timeseries_file": '',
+      "timeseries_name": this.state.timeseriesColumn,
+      "cluster_sample_count": this.state.binCount,
+      "cluster_sample_type": this.state.resamplingAlg,
+      "cluster_metric": this.state.clusterMetric,
+      "workdir": this.state.workDir,
+      "hdf5_directory": this.state.hdf5Directory,
+      "retain_hdf5": true
+    };
+
+    client.put_model_parameter({
+      mid: this.state.model["_id"],
+      aid: 'jid',
+      value: this.state.jid,
+      input: true
     });
+
+    client.post_sensitive_model_command_fetch(
+      {
+        mid: this.state.model["_id"],
+        type: "timeseries",
+        command: "update-model-info",
+        parameters: {
+          working_directory: working_directory,
+          jid: this.state.jid,
+          fn: "timeseries-model",
+          hostname: this.state.hostname,
+          username: this.state.username,
+          fn_params: agent_function_params,
+          uid: uid
+        },
+      }).then((result) => {
+        console.log(result);
+    });
+  };
+
+  name_model = () => {
+    // Validating
+    // formElement.classList.add('was-validated');
+
+    // If valid...
+    // if (formElement.checkValidity() === true)
+    // {
+      // Clearing form validation
+      // formElement.classList.remove('was-validated');
+      // Creating new model
+
+      client.put_model_fetch({
+        mid: this.state.model["_id"],
+        name: this.state.timeseriesName,
+        description: this.state.modelDescription,
+        marking: "None",
+      }).then((result) => {
+        this.go_to_model();
+      })
+    // }
+  }
+
+  go_to_model = () => {
+    location = (server_root + 'models/' + this.state.model["_id"]) as any;
   };
 
   render() {

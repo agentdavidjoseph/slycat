@@ -9,7 +9,7 @@ export interface ModalContentProps {
   closingCallBack: Function;
   title: string;
   body: JSX.Element;
-  footer: JSX.Element;
+  footer: JSX.Element[];
 }
 
 /**

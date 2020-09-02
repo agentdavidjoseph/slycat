@@ -20,7 +20,7 @@ export interface ConnectButtonProps {
   username: string
   password: string
   callBack: Function
-  sessionExists: boolean
+  sessionExists?: boolean
   text?:string
 }
 
