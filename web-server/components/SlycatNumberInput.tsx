@@ -8,6 +8,8 @@ export interface SlycatNumberInputProps {
   style?: any
   label: string
   callBack: Function
+  id?: string
+  warning?: string
 }
 
 /**
@@ -33,6 +35,9 @@ export default class SlycatNumberInput extends React.Component<SlycatNumberInput
 
   onValueChange = (value:number) => {
     // localStorage.setItem("slycat-remote-controls-username", value);
+    if(value === '') {
+      value = 1;
+    }
     this.setState({value: value});
     this.props.callBack(value);
   };
@@ -43,10 +48,14 @@ export default class SlycatNumberInput extends React.Component<SlycatNumberInput
         <label className='col-sm-2 col-form-label'>{this.props.label}</label>
         <div className='col-sm-9'>
           <input
+            id={this.props.id}
             className='form-control' type='number' min={1}
             value={this.state.value}
             onChange={(e)=>this.onValueChange(e.target.value)}
-            />
+          />
+          <div className="invalid-feedback">
+            {this.props.warning}
+          </div>
         </div>
     </div>
     );

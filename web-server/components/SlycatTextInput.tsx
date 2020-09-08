@@ -9,6 +9,8 @@ export interface SlycatTextInputProps {
   style?: any
   label: string
   callBack: Function
+  id?: string
+  warning?: string
 }
 
 /**
@@ -45,10 +47,14 @@ export default class SlycatTextInput extends React.Component<SlycatTextInputProp
         <label className='col-sm-2 col-form-label'>{this.props.label}</label>
         <div className='col-sm-9'>
           <input
+            id={this.props.id}
             className='form-control' type='text'
             value={this.state.value}
             onChange={(e)=>this.onValueChange(e.target.value)}
             />
+            <div className="invalid-feedback">
+              {this.props.warning}
+            </div>
         </div>
     </div>
     );
