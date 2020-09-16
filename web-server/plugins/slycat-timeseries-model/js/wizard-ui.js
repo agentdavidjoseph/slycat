@@ -21,7 +21,7 @@ function constructor(params) {
 
   // this is where we render react into the timeseries modal
   ReactDOM.render(
-    <TimeseriesWizard project={params.projects()[0]}/>,
+    <TimeseriesWizard project={params.projects()[0]} markings={markings.preselected()}/>,
     document.querySelector(".react-wizard")
   );
   // everything after this is basically skipped

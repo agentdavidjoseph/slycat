@@ -1390,6 +1390,28 @@ module.get_job_output = function(params) {
   });
 };
 
+module.get_user_config_fetch = function(params, successFunction, errorFunction)
+{
+  return fetch(`${api_root}remotes/${params.hostname}/get-user-config`,
+      {
+        credentials: "same-origin",
+        cache: "no-store",
+        dataType: "application/json"
+      })
+  .then(function(response) {
+    if (!response.ok) {
+        throw `bad response with: ${response.status} :: ${response.statusText}`;
+    }
+    return response.json();
+  }).catch((error) => {
+    if (errorFunction) {
+      errorFunction(error)
+    } else {
+      console.log(error);
+    }
+  });
+}
+
 module.get_user_config = function(params) {
   $.ajax({
     contentType: 'application/json',

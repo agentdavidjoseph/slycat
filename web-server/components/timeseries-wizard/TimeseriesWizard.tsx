@@ -12,12 +12,14 @@ import RemoteFileBrowser from 'components/RemoteFileBrowser.tsx'
 import SlycatSelector from 'components/SlycatSelector.tsx';
 import server_root from "js/slycat-server-root";
 import cloneDeep from "lodash";
+import markings from "js/slycat-markings";
 
 /**
  * not used
  */
 export interface TimeseriesWizardProps {
   project: any;
+  markings: any;
 }
 
 /**
@@ -60,6 +62,8 @@ export interface TimeseriesWizardState {
   modelDescription: string;
   TimeSeriesLocalStorage: any;
   validForms: boolean;
+  marking: { text: string, value: string}[];
+  selectedMarking: {text: string, value: string}[];
 }
 
 /**
@@ -75,7 +79,7 @@ export default class TimeseriesWizard extends React.Component<
   public constructor(props: TimeseriesWizardProps) {
     super(props);
     this.state = {
-      project: this.props.project,
+      project: props.project,
       model: { _id: '' },
       modalId: "slycat-wizard",
       jid: '',
@@ -107,12 +111,15 @@ export default class TimeseriesWizard extends React.Component<
       userConfig: { 'slurm': {}, 'timeseries-wizard': {} },
       idCol: '%eval_id',
       delimiter: ',',
-      timeseriesName: 'TEST',
-      modelDescription: 'TEST',
+      timeseriesName: '',
+      modelDescription: '',
       TimeSeriesLocalStorage: localStorage.getItem("slycat-timeseries-wizard") as any,
       validForms: true,
+      marking: [],
+      selectedMarking: [],
     };
     initialState = cloneDeep(this.state);
+    this.getMarkings();
     this.create_model();
   }
 
@@ -190,7 +197,7 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               id={"delimiter"}
               label={"Table File Delimeter"}
-              value={','}
+              value={this.state.delimiter ? this.state.delimiter : ','}
               warning={"Please enter a table file delimiter."}
               callBack={(delim: string) => {
                 this.setState({ delimiter: delim });
@@ -233,6 +240,14 @@ export default class TimeseriesWizard extends React.Component<
                 this.setState({ clusterLinkageMeasure: clusterLinkage });
               }}
             />
+            <SlycatSelector
+              label={'Cluster Metric'}
+              options={[{ 'text': 'euclidean', 'value': 'euclidean' }]}
+              disabled={true}
+              onSelectCallBack={(metric: string) => {
+                this.setState({ clusterMetric: metric });
+              }}
+            />
           </div>
           : null}
         {this.state.visibleTab === "3" ?
@@ -258,7 +273,7 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               id={"account-id"}
               label={"Account ID"}
-              value={''}
+              value={this.state.accountId ? this.state.accountId : ''}
               warning={"Please enter an account ID."}
               callBack={(id: string) => {
                 this.setState({ accountId: id });
@@ -267,7 +282,7 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               id={"partition"}
               label={"Partition/Queue"}
-              value={''}
+              value={this.state.partition ? this.state.partition : ''}
               warning={"Please enter a partition/batch."}
               callBack={(part: string) => {
                 this.setState({ partition: part });
@@ -275,22 +290,22 @@ export default class TimeseriesWizard extends React.Component<
             />
             <SlycatNumberInput
               label={'Number of nodes'}
-              value={1}
+              value={this.state.numNodes ? this.state.numNodes : 1}
               callBack={(num: number) => {
                 this.setState({ numNodes: num });
               }}
             />
             <SlycatNumberInput
               label={'Cores'}
-              value={2}
+              value={this.state.cores ? this.state.cores : 2}
               callBack={(numCores: number) => {
                 this.setState({ cores: numCores });
               }}
             />
             <SlycatTimeInput
               label={'Requested Job Time'}
-              hours={0}
-              minutes={30}
+              hours={this.state.jobHours ? this.state.jobHours : 0}
+              minutes={this.state.jobMin ? this.state.jobMin : 30}
               minCallBack={(mins: number) => {
                 this.setState({ jobMin: mins });
               }}
@@ -301,7 +316,7 @@ export default class TimeseriesWizard extends React.Component<
             <SlycatTextInput
               id={"work-dir"}
               label={"Working Directory"}
-              value={''}
+              value={this.state.workDir ? this.state.workDir : ''}
               warning={"Please enter a working directory."}
               callBack={(dir: string) => {
                 this.setState({ workDir: dir });
@@ -325,6 +340,13 @@ export default class TimeseriesWizard extends React.Component<
               value={''}
               callBack={(description: string) => {
                 this.setState({ modelDescription: description });
+              }}
+            />
+            <SlycatSelector
+              label={'Marking'}
+              options={this.state.marking}
+              onSelectCallBack={(marking: any) => {
+                this.setState({ selectedMarking: marking });
               }}
             />
           </div>
@@ -399,9 +421,21 @@ export default class TimeseriesWizard extends React.Component<
 
   continue = () => {
     if (this.validateFields()) {
-      
+
       if (this.state.visibleTab === '0' && this.state.selectedOption != 'hdf5') {
-        this.setState({ visibleTab: '1' });
+        this.setState({ visibleTab: '1' }, () => {
+          client.get_user_config_fetch({ hostname: this.state.hostname })
+            .then((results) => {
+              this.setState({
+                numNodes: results["config"]["slurm"]["nnodes"], cores: results["config"]["slurm"]["ntasks-per-node"],
+                partition: results["config"]["slurm"]["partition"], jobHours: results["config"]["slurm"]["time-hours"],
+                jobMin: results["config"]["slurm"]["time-minutes"], accountId: results["config"]["slurm"]["wcid"],
+                workDir: results["config"]["slurm"]["workdir"], idCol: results["config"]["timeseries-wizard"]["id-column"],
+                delimiter: results["config"]["timeseries-wizard"]["inputs-file-delimiter"],
+                timeseriesColumn: results["config"]["timeseries-wizard"]["timeseries-name"]
+              });
+            });
+        });
       }
       else if (this.state.visibleTab === '0' && this.state.selectedOption == 'hdf5') {
         this.setState({ visibleTab: '2' });
@@ -462,6 +496,19 @@ export default class TimeseriesWizard extends React.Component<
     else if (this.state.visibleTab === '6') {
       this.setState({ visibleTab: '5' });
     }
+  }
+
+  getMarkings = () => {
+    client.get_configuration_markings_fetch().then((markings) => {
+      markings.sort(function (left: any, right: any) {
+        return left.type == right.type ? 0 : left.type < right.type ? -1 : 1;
+      });
+      if (markings.length) {
+        console.log(markings);
+        const configured_markings = markings.map((marking:any) => {return {text: marking["label"], value: marking["type"]} });
+        this.setState({ marking: configured_markings });
+      }
+    });
   }
 
   compute = () => {
@@ -553,14 +600,14 @@ export default class TimeseriesWizard extends React.Component<
 
   cleanup = () => {
     this.setState(initialState);
-    client.delete_model_fetch({ mid: this.state.model['_id'] });
+    client.delete_model_fetch({ mid: this.state.model['id'] });
   };
 
   create_model = () => {
     client.post_project_models_fetch({
       pid: this.state.project._id(),
       type: 'timeseries',
-      name: '',
+      name: this.state.timeseriesName,
       description: '',
       marking: '',
     }).then((result) => {
@@ -776,7 +823,7 @@ export default class TimeseriesWizard extends React.Component<
   };
 
   server_update_model_info = (uid: string) => {
-    if (!this.state.model["_id"])
+    if (!this.state.model["id"])
       return void 0;
 
     var working_directory = this.state.workDir + "/slycat/" + uid + "/";
@@ -800,7 +847,7 @@ export default class TimeseriesWizard extends React.Component<
     };
 
     client.put_model_parameter({
-      mid: this.state.model["_id"],
+      mid: this.state.model["id"],
       aid: 'jid',
       value: this.state.jid,
       input: true
@@ -808,7 +855,7 @@ export default class TimeseriesWizard extends React.Component<
 
     client.post_sensitive_model_command_fetch(
       {
-        mid: this.state.model["_id"],
+        mid: this.state.model["id"],
         type: "timeseries",
         command: "update-model-info",
         parameters: {
@@ -837,10 +884,10 @@ export default class TimeseriesWizard extends React.Component<
     // Creating new model
 
     client.put_model_fetch({
-      mid: this.state.model["_id"],
+      mid: this.state.model["id"],
       name: this.state.timeseriesName,
       description: this.state.modelDescription,
-      marking: "None",
+      marking: this.state.selectedMarking,
     }).then((result) => {
       this.go_to_model();
     })
@@ -848,7 +895,7 @@ export default class TimeseriesWizard extends React.Component<
   }
 
   go_to_model = () => {
-    location = (server_root + 'models/' + this.state.model["_id"]) as any;
+    location = (server_root + 'models/' + this.state.model["id"]) as any;
   };
 
   render() {
@@ -856,7 +903,7 @@ export default class TimeseriesWizard extends React.Component<
       <ModalContent
         modalId={this.state.modalId}
         closingCallBack={this.cleanup}
-        title={"Timeseries Wizard" + this.state.visibleTab}
+        title={"Timeseries Wizard"}
         body={this.getBodyJsx()}
         footer={this.getFooterJSX()}
       />
