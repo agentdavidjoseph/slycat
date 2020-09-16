@@ -6,6 +6,7 @@ import { JobCodes } from "./JobCodes.tsx";
 import LogList from "./LogList.tsx";
 import LoadingPageButtons from "./LoadingPageButtons.tsx";
 import InfoBar from "./InfoBar.tsx";
+import ConnectModal from "components/ConnectModal.tsx";
 /**
  * react component used to create a loading page
  *
@@ -141,7 +142,7 @@ export default class LoadingPage extends React.Component<LoadingPageProps, Loadi
   private appendLog = (resJson: any) => {
     this.state.log.logLineArray = resJson.logFile.split("\n");
     this.setState({
-      jobStatus: `Job Status: ${resJson.status.state}`,
+      jobStatus: `${resJson.status.state}`,
       log: this.state.log,
     });
     switch (resJson.status.state) {
@@ -206,6 +207,11 @@ export default class LoadingPage extends React.Component<LoadingPageProps, Loadi
             />
           </div>
           <div className="row justify-content-center">
+            <ConnectModal
+              hostname={this.props.hostname}
+              modalId={this.state.modalId}
+              callBack={this.connectModalCallBack}
+            />
             <div className="btn-group col-8" role="group">
               <LoadingPageButtons
                 hostname={this.props.hostname}
