@@ -15,6 +15,7 @@ import selections from "./dac-manage-selections.js";
 import metadata_table from "./dac-table.js";
 import plots from "./dac-plots.js";
 import d3 from "d3";
+import * as fc from "d3fc";
 import URI from "urijs";
 
 // public functions will be returned via the module variable
@@ -275,7 +276,7 @@ module.setup = function (MAX_POINTS_ANIMATE, SCATTER_BORDER,
 	$.when (request.get_array("dac-mds-coords", 0, mid)).then(
 		function (mds_data)
 		{
-
+			
 			// input data into model
 			mds_coords = mds_data;
 
@@ -298,6 +299,7 @@ module.setup = function (MAX_POINTS_ANIMATE, SCATTER_BORDER,
                              include_columns: var_include_columns},
                 success: function (result)
                     {
+						
                         // record new values in mds_coords
                         mds_coords = JSON.parse(result)["mds_coords"];
 
@@ -306,7 +308,8 @@ module.setup = function (MAX_POINTS_ANIMATE, SCATTER_BORDER,
                                          .on("keyup.brush", key_flip);
 
                         // svg scatter plot
-                        scatter_plot = d3.select("#dac-mds-scatterplot");
+						scatter_plot = d3.select("#dac-mds-scatterplot")
+										 .append("svg");
 
                         // d3 scales
                         x_scale = d3.scale.linear()
@@ -329,7 +332,7 @@ module.setup = function (MAX_POINTS_ANIMATE, SCATTER_BORDER,
                             .interpolate(d3.interpolateRgb);
 
                         // finish with color plot
-                        color_plot(init_color_by_sel);
+						color_plot(init_color_by_sel);
 
                     },
                 error: function ()
