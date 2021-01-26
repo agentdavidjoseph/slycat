@@ -1,25 +1,14 @@
-// This function contains code for displaying the scatter plot
-// for dial-a-cluster.  Code includes setup, and resizing the 
-// jQuery UI layout pane and buttons for selection/zoom and coloring.
-//
-// NOTE: This routine assume the coordinates returned by MDS always
-// lie within a box [0,1]^3.
-//
+// This module contains the code to plot the points in the scatter plot.
+
 // S. Martin
-// 1/27/2015
+// 1/21/2021
 
 import client from "js/slycat-web-client";
 import * as dialog from "js/slycat-dialog";
-import request from "./dac-request-data.js";
-import selections from "./dac-manage-selections.js";
-import metadata_table from "./dac-table.js";
-import plots from "./dac-plots.js";
-import d3 from "d3";
-import * as fc from "d3fc";
 import URI from "urijs";
 
-import scatter_buttons from "./dac-scatter-buttons";
-import scatter_points from "./dac-scatter-points";
+import selections from "./dac-manage-selections";
+import request from "./dac-request-data.js";
 
 // public functions will be returned via the module variable
 var module = {};
@@ -27,130 +16,109 @@ var module = {};
 // model ID
 var mid = URI(window.location).segment(-1);
 
+// private variable containing MDS coordinates (2 dimensional)
+var mds_coords = [];
+
+// only use selected subset (binary mask, 0 = not in subset, 1 = in subset)
+var mds_subset = [];
+
+// current coordinates for subset view
+var subset_center = [];
+
+// d3 variables for drawing MDS coords
+var scatter_plot = null;
+var scatter_points = null;
+var x_scale = null;
+var y_scale = null;
+var color_scale = null;
+
 // color by data
 var curr_color_by_col = [];
 
-// maximum number of points to animate
-var max_points_animate = null;
-
-// scatter border size
-var scatter_border = null;
-
-// colors to use for selections
-var point_color = null;
-var point_size = null;
-var sel_color = null;
-var focus_color = null;
-var no_sel_color = null;
-
-// max number of selections
-var max_num_sel = null;
-
-// user preferences for circles or squares
-var scatter_plot_type = null;
-
-// keep track of color for point in focus
-var focus_point_color = null;
-
-// outline width for selections
-var outline_no_sel = null;
-var outline_sel = null;
-
-// colors to use for scaling
-var color_by_low = null;
-var color_by_high = null;
-var colormap = null;
-
-// variables to use in analysis
-var var_include_columns = null;
-
-// show/hide filtered points (mask)
-var filtered_selection = [];
-
-// filter button state
-var filter_button_on = false;
-
-// keep track of number of metadata columns (not counting editable columns)
-var num_metadata_cols = null;
-
-// model origin data
-var num_origin_col = null;
-var model_origin = {};
-
-// initial setup: read in MDS coordinates & plot
-module.setup = function (MAX_POINTS_ANIMATE, SCATTER_BORDER,
-	POINT_COLOR, POINT_SIZE, SCATTER_PLOT_TYPE,
-	NO_SEL_COLOR, SELECTION_COLOR, SEL_FOCUS_COLOR,
-	COLOR_BY_LOW, COLOR_BY_HIGH, COLORMAP,
-	MAX_COLOR_NAME, OUTLINE_NO_SEL, OUTLINE_SEL,
-	datapoints_meta, meta_include_columns, VAR_INCLUDE_COLUMNS,
-	init_alpha_values, init_color_by_sel, init_zoom_extent,
-	init_subset_center, init_subset_flag, init_fisher_order,
-	init_fisher_pos, init_diff_desired_state, init_filter_button,
-	init_filter_mask, editable_columns, MODEL_ORIGIN)
+// setup scatter points
+module.setup = function (init_subset_center, init_alpha_values, VAR_INCLUDE_COLUMNS)
 {
 
-	// set the maximum number of points to animate, maximum zoom factor
-	max_points_animate = MAX_POINTS_ANIMATE;
+    // include columns (variables and metadata)
+    var_include_columns = VAR_INCLUDE_COLUMNS;
+    
+	$.when (request.get_array("dac-mds-coords", 0, mid)).then(
+		function (mds_data)
+		{
+			
+			// input data into model
+			mds_coords = mds_data;
 
-	// set scatter border size
-	scatter_border = SCATTER_BORDER;
+            // set center to bookmarked value, otherwise center of screen
+            subset_center = init_subset_center;
 
-	// set the colors to use for selections
-	point_color = POINT_COLOR;
-	focus_point_color = POINT_COLOR;
-	point_size = POINT_SIZE;
-	no_sel_color = NO_SEL_COLOR;
-	sel_color = SELECTION_COLOR;
-	focus_color = SEL_FOCUS_COLOR;
-	scatter_plot_type = SCATTER_PLOT_TYPE;
+            // set subset to full mds_coord set, unless subset is available
+            mds_subset = selections.get_subset();
 
-    // maximum number of selections
-    max_num_sel = sel_color.length;
+			// call server to compute new coords (in case of bookmarks)
+            client.post_sensitive_model_command(
+            {
+                mid: mid,
+                type: "DAC",
+                command: "update_mds_coords",
+                parameters: {alpha: init_alpha_values,
+                             subset: selections.get_subset(),
+                             subset_center: subset_center,
+                             current_coords: mds_coords,
+                             include_columns: var_include_columns},
+                success: function (result)
+                    {
+						
+                        // record new values in mds_coords
+                        mds_coords = JSON.parse(result)["mds_coords"];
 
-	// set colors for scaling
-	color_by_low = COLOR_BY_LOW;
-	color_by_high = COLOR_BY_HIGH;
-	colormap = COLORMAP;
+                        // init shift key detection
+                        d3.select("body").on("keydown.brush", key_flip)
+                                         .on("keyup.brush", key_flip);
 
-	// set selection width
-	outline_no_sel = OUTLINE_NO_SEL;
-	outline_sel = OUTLINE_SEL;
+                        // svg scatter plot
+						scatter_plot = d3.select("#dac-mds-scatterplot")
+										 .append("svg");
 
-	// include columns (variables and metadata)
-	var_include_columns = VAR_INCLUDE_COLUMNS;
+                        // d3 scales
+                        x_scale = d3.scale.linear()
+                            .domain([0 - scatter_border, 1 + scatter_border]);
+                        y_scale = d3.scale.linear()
+                            .domain([0 - scatter_border, 1 + scatter_border]);
 
-    // save model origin data
-    model_origin["data"] = [MODEL_ORIGIN];
+                        // check for previous zooming
+                        if (init_zoom_extent != null) {
+                            x_scale.domain([init_zoom_extent[0][0], init_zoom_extent[1][0]]);
+                            y_scale.domain([init_zoom_extent[0][1], init_zoom_extent[1][1]]);
 
-	// set up scatter plot buttons
-	scatter_buttons.setup(sel_color, init_subset_flag, init_fisher_order,
-						  init_fisher_pos, init_diff_desired_state, var_include_columns,
-						  datapoints_meta, meta_include_columns, editable_columns, 
-						  MODEL_ORIGIN, init_color_by_sel, MAX_COLOR_NAME);
+                            // change zoom button to yellow
+                            $("#dac-scatter-button-zoom").addClass("text-warning");
+                        }
 
-	// bind selection/zoom buttons to callback operations
-	$("#dac-scatter-button-sel-1").on("click",
-		function() { selections.set_sel_type(1); module.draw(); });
-	$("#dac-scatter-button-sel-2").on("click",
-		function() { selections.set_sel_type(2); module.draw(); });
-	$("#dac-scatter-button-sel-3").on("click",
-		function() { selections.set_sel_type(3); module.draw(); });
-	$("#dac-scatter-button-subset").on("click",
-		function() { selections.set_sel_type(-1); module.draw(); })
-	$("#dac-scatter-button-zoom").on("click",
-		function() { selections.set_sel_type(0); module.draw(); });
+                        // default color scale
+                        color_scale = d3.scale.linear()
+                            .range([color_by_low, color_by_high])
+                            .interpolate(d3.interpolateRgb);
 
-    // bind filter button to callback
-    $("#dac-filter-plots-button").on("click", filter_plots);
+						// finish with color plot
+						//curr_color_by_col = scatter_buttons.get_color_by_col();
+						//console.log(curr_color_by_col);
+						//module.draw_color();
 
-    // initialize filter button state
-    filter_button_on = init_filter_button;
-    if (filter_button_on) {
-        $("#dac-filter-plots-button").addClass("bg-warning");
-    }
+                    },
+                error: function ()
+                    {
+                        dialog.ajax_error ('Server failure: could not load bookmarked MDS coords.')("","","");
+                    }
 
-	scatter_points.setup(init_subset_center, init_alpha_values, VAR_INCLUDE_COLUMNS);
+            });
+		},
+		function ()
+		{
+			dialog.ajax_error ("Server failure: could not load MDS coords.")("","","");
+		}
+	);
+
 }
 
 // toggle shift key flag
@@ -509,7 +477,7 @@ var animate_squares = function ()
 }
 
 // updates the MDS coords given new alpha values and/or subset
-module.update = function (alpha_values)
+module.update_alpha = function (alpha_values)
 {
 
 	// call server to compute new coords
@@ -652,7 +620,7 @@ module.recolor_plot = function (col)
 }
 
 // set color vector data
-module.set_color_by_col(color_by_col)
+module.update_color_by_col = function(color_by_col)
 {
 	curr_color_by_col = color_by_col;
 }
@@ -1147,7 +1115,5 @@ function defocus() {
 
 }
 
-// pass through to scatter buttons
-module.toggle_difference = scatter_buttons.toggle_difference;
 
 export default module;
