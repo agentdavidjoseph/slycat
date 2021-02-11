@@ -14,7 +14,7 @@ import layout from "./dac-layout.js";
 import request from "./dac-request-data.js";
 import alpha_sliders from "./dac-alpha-sliders.js";
 import alpha_buttons from "./dac-alpha-buttons.js";
-import scatter_plot from "./dac-scatter-plot.js";
+import scatter_buttons from "./dac-scatter-buttons.js";
 import plots from "./dac-plots.js";
 import metadata_table from "./dac-table.js";
 import selections from "./dac-manage-selections.js";
@@ -839,6 +839,13 @@ $(document).ready(function() {
 				                            init_plots_displayed, init_plots_zoom_x, init_plots_zoom_y,
 				                            init_link_plots);
 
+                                // set up the scatter plot buttons
+                                scatter_buttons.setup(SELECTION_COLOR, init_subset_flag, init_fisher_order,
+                                    init_fisher_pos, init_diff_desired_state, var_include_columns,
+                                    data_table_meta[0], meta_include_columns, editable_columns, 
+                                    model_origin, init_color_by_sel, MAX_COLOR_NAME);
+
+                                /*
 				                // set up the MDS scatter plot
 				                scatter_plot.setup(MAX_POINTS_ANIMATE, SCATTER_BORDER, POINT_COLOR,
 					                POINT_SIZE, SCATTER_PLOT_TYPE, NO_SEL_COLOR, SELECTION_COLOR,
@@ -848,6 +855,7 @@ $(document).ready(function() {
 					                init_alpha_values, init_color_by_sel, init_zoom_extent, init_subset_center,
 					                init_subset_flag, init_fisher_order, init_fisher_pos, init_diff_desired_state,
 					                init_filter_button, init_filter_mask, editable_columns, model_origin);
+                                */
 
                                 // set up table with editable columns
                                 metadata_table.setup(data_table_meta, data_table, meta_include_columns,
@@ -1024,7 +1032,7 @@ $(document).ready(function() {
 
         // update change in selection
         if (new_sel[1]) {
-            scatter_plot.toggle_difference(false);
+            scatter_buttons.toggle_difference(false);
         }
 
         // reset zoom, if necessary

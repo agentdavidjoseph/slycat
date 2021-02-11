@@ -69,10 +69,9 @@ module.setup = function (sel_color, init_subset_flag, init_fisher_order,
     $("#dac-scatter-button-sel-2").css("color", sel_color[1]);
     $("#dac-scatter-button-sel-3").css("color", sel_color[2]);
 
-        // maximum number of selections
+    // maximum number of selections
     max_num_sel = sel_color.length;
 
-    /*
     // bind selection/zoom buttons to callback operations
     $("#dac-scatter-button-sel-1").on("click",
     function() { selections.set_sel_type(1); scatter_plot.draw(); });
@@ -84,7 +83,6 @@ module.setup = function (sel_color, init_subset_flag, init_fisher_order,
     function() { selections.set_sel_type(-1); scatter_plot.draw(); })
     $("#dac-scatter-button-zoom").on("click",
     function() { selections.set_sel_type(0); scatter_plot.draw(); });
-    */
 
     // set initial subset button indicator
     if (init_subset_flag) {
@@ -115,18 +113,15 @@ module.setup = function (sel_color, init_subset_flag, init_fisher_order,
         module.toggle_difference(diff_desired_state);
     }
 
-    /*
     // set up filter button
 
     // bind filter button to callback
-    $("#dac-filter-plots-button").on("click", filter_plots);
+    $("#dac-filter-plots-button").on("click", scatter_plot.filter_plots);
 
     // initialize filter button state
-    filter_button_on = init_filter_button;
-    if (filter_button_on) {
+    if (selections.filter_button_status) {
         $("#dac-filter-plots-button").addClass("bg-warning");
     }
-    */
 
     // set up color by menu
 
@@ -193,10 +188,7 @@ module.setup = function (sel_color, init_subset_flag, init_fisher_order,
 
     // compute curr color vector
     compute_color_col(init_color_by_sel);
-
-    console.log("scatter-buttons:");
-    console.log(curr_color_by_col);
-
+    
 }
 
 // previous three button
